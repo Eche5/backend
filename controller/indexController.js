@@ -3,6 +3,7 @@ const PaymentService = require("../services/payment");
 const walletPaymentService = require("../services/walletPayment");
 const walletpaymentInstance = new walletPaymentService();
 const paymentInstance = new PaymentService();
+
 exports.GetAllParcels = (req, res) => {
   const query = "SELECT * FROM pickupman.parcels";
   db.query(query, (error, parcels) => {
