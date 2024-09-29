@@ -1,10 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controller/admincontroller");
-const { super_admin } = require("../middleware/role");
+const { super_admin, processing_user } = require("../middleware/role");
 const { auth } = require("../middleware/auth");
+const checkRoles = (roles) => {
+  return (req, res, next) => {
+    const userRole = req.user.role; // Assuming `req.user.role` contains the role of the authenticated user
+    if (!roles.includes(userRole)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    next();
+  };
+};
 
 router.route("/team").get([auth, super_admin], controller.getAllTeamMembers);
 router.route("/payments").get([auth, super_admin], controller.getAllPayments);
-router.route("/updateparcel").patch([auth, super_admin], controller.updateParcel);
+router
+  .route("/updateparcel")
+  .patch(
+    [auth, checkRoles(["super_admin", "processing_user"])],
+    controller.updateParcel
+  );
+router
+  .route("/getShipment/:tracking_number")
+  .get(
+    [auth, checkRoles(["super_admin", "processing_user"])],
+    controller.getParcelByTrackingNumber
+  );
 module.exports = router;

@@ -2,21 +2,15 @@ const axios = require("axios");
 const _ = require("lodash");
 const db = require("../utils/db");
 const { initializePayment, verifyPayment } =
-  require("../config/paystack")(axios);
+  require("../config/walletpaystack")(axios);
 
 module.exports = class PaymentService {
   startPayment(data) {
     return new Promise(async (resolve, reject) => {
       try {
-        const formData = _.pick(data, [
-          "amount",
-          "email",
-          "full_name",
-          "tracking_number",
-        ]);
+        const formData = _.pick(data, ["amount", "email", "full_name"]);
         formData.metadata = {
           full_name: formData.full_name,
-          tracking_number: formData.tracking_number,
         };
         formData.amount *= 100;
         const response = await initializePayment(formData);
@@ -38,26 +32,26 @@ module.exports = class PaymentService {
       const response = await verifyPayment(ref);
       const { reference, amount, status } = response.data.data;
       const { email } = response.data.data.customer;
-      const { full_name, tracking_number } = response.data.data.metadata;
+      const { full_name } = response.data.data.metadata;
 
       const newPayment = {
         reference,
-        amount: Number(amount) / 100,
+        amount: Number(amount) / 100, 
         email,
         fullname: full_name,
         status,
-        tracking_number,
       };
-      const query = "SELECT * FROM payments WHERE reference = ?";
 
+      const query = "SELECT * FROM payments WHERE reference = ?";
       const existingPayment = await new Promise((resolve, reject) => {
         db.query(query, [reference], (error, result) => {
           if (error) {
             return reject(error);
           }
-          resolve(result[0]);
+          resolve(result[0]); 
         });
       });
+
       let payment;
 
       if (existingPayment) {
@@ -75,14 +69,13 @@ module.exports = class PaymentService {
         payment = { ...existingPayment, status };
       } else {
         const insertQuery = `
-        INSERT INTO payments (reference, amount, email, full_name, status, tracking_number) 
-        VALUES (?, ?, ?, ?, ?, ?)`;
+        INSERT INTO payments (reference, amount, email, full_name, status) 
+        VALUES (?, ?, ?, ?, ?)`;
         let wallet_amount = Number(amount) / 100;
-
         await new Promise((resolve, reject) => {
           db.query(
             insertQuery,
-            [reference, wallet_amount, email, full_name, status, tracking_number],
+            [reference, wallet_amount, email, full_name, status],
             (error, result) => {
               if (error) {
                 return reject(error);
@@ -92,7 +85,7 @@ module.exports = class PaymentService {
           );
         });
 
-        payment = newPayment;
+        payment = newPayment; 
       }
 
       return payment; 

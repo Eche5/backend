@@ -43,7 +43,6 @@ exports.createshipment = async (req, res) => {
     landmark,
     receiver_landmark,
   } = req.body;
-  console.log(shipping_fee)
   const status = "Created";
   const payment_status = "Pending";
   const query = `INSERT INTO parcels (sender_id,first_name,last_name,phone_number, email, city,region, postal_code,social_media_handle,receiver_first_name,receiver_last_name,receiver_email,receiver_phone_number,receiver_city,receiver_region,receiver_postal_code,receiver_social_media_handle,street_address,receiver_street_address,insurance,fragile,parcel_weight,parcel_price,package_description,selected_Deliverymode,shipping_fee,payment_status,status,tracking_number, item_name,

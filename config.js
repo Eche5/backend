@@ -5,4 +5,5 @@ module.exports = {
   jwt_secret: process.env.JWT_SECRET,
   jwt_expires: process.env.JWT_EXPIRES,
   paystack_key_api: process.env.PAYSTACK_APIKEY,
+  paystack_wallet_key_api: process.env.PAYSTACK_WALLET_APIKEY,
 };

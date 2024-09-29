@@ -5,7 +5,6 @@ const { jwt_secret, jwt_expires } = require("../config");
 const db = require("../utils/db");
 const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
-const { query } = require("express");
 exports.createUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -260,14 +259,14 @@ exports.createTeamMembers = async (req, res) => {
     db.query(
       query,
       [email, hashedPassword, first_name, last_name, phonenumber, role],
-      (error, results) => {
+      async (error, results) => {
         if (error) {
           console.error("Error inserting user:", error);
           return res
             .status(500)
             .json({ success: false, message: "Database error" });
         }
-
+        await sendLoginDetails(email, first_name, password);
         res.status(201).json({
           success: true,
           message: "Team member created successfully",
@@ -279,6 +278,82 @@ exports.createTeamMembers = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+const sendLoginDetails = async (email, first_name, password) => {
+  let MailGenerator = new Mailgen({
+    theme: "default",
+    product: {
+      name: "Pickupman",
+      link: "https://pickupman.vercel.app",
+      copyright: "Copyright © 2024 Pickupman. All rights reserved.",
+      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
+      logoHeight: "30px",
+    },
+  });
+
+  // Define the content of the email with login details
+  let response = {
+    body: {
+      name: first_name, // Assuming `user` is an object with a `first_name` field
+      intro: "Welcome to Pickupman! Below are your login credentials.",
+      table: {
+        data: [
+          {
+            item: "Email",
+            description: email, // Email from the user object
+          },
+          {
+            item: "Password",
+            description: password, // Plain-text password
+          },
+        ],
+      },
+      action: {
+        instructions: "You can log in to your account using the button below:",
+        button: {
+          color: "#22BC66", // Button color
+          text: "Login to Pickupman",
+          link: "https://pickupman.vercel.app/login", // Your login page link
+        },
+      },
+      outro:
+        "For security reasons, we recommend changing your password after logging in.",
+      signature: "Best Regards",
+    },
+  };
+
+  let mail = MailGenerator.generate(response);
+
+  let message = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Your Pickupman Login Details",
+    html: mail,
+  };
+
+  const transporter = nodemailer.createTransport({
+    host: "mail.pickupmanng.ng",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  try {
+    const info = await transporter.sendMail(message);
+    console.log("Email sent successfully:", info.response);
+    return true;
+  } catch (err) {
+    console.error("Error sending email:", err);
+    return false;
+  }
+};
+
 exports.login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -378,7 +453,6 @@ exports.refresh = (req, res) => {
     if (err) return res.status(403).json({ message: "Forbidden" });
     const query = `SELECT * FROM users WHERE email = ?`;
     db.query(query, [decoded._id], async (error, user) => {
-      console.log(user);
       if (!user) return res.status(401).json({ message: "User unauthorized" });
       const accessToken = jwt.sign({ _id: user[0].email }, jwt_secret, {
         expiresIn: "7d",
@@ -396,4 +470,13 @@ exports.refresh = (req, res) => {
       });
     });
   });
+};
+exports.LogOut = (req, res) => {
+  const cookie = req.cookies;
+
+  if (!cookie) return res.sendStatus(204); //No content
+
+  res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+
+  res.json({ message: "Cookie cleared" });
 };
