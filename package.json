@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "npm run start",
-    "start": "nodemon server.js",
-    "build": "powershell -Command \"if (!(Test-Path dist)) { mkdir dist }; robocopy . dist /E /XD dist\""
+    "start": "nodemon server.js"
   },
   "author": "",
   "license": "ISC",
