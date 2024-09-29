@@ -6,8 +6,7 @@
   "scripts": {
     "test": "npm run start",
     "start": "nodemon server.js",
-    "build": "echo 'No build step needed'"  
-
+    "build": "powershell -Command \"if (!(Test-Path dist)) { mkdir dist }; robocopy . dist /E /XD dist\""
   },
   "author": "",
   "license": "ISC",
