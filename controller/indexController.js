@@ -73,6 +73,7 @@ exports.startPayment = async (req, res, next) => {
       };
       try {
         const response = await paymentInstance.startPayment(paymentData);
+
         res.status(201).json({
           success: true,
           status: "Payment Started",
