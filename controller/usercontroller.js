@@ -3,7 +3,6 @@ const db = require("../utils/db");
 exports.createshipment = async (req, res) => {
   const sender_id = req.user.id;
 
-  // Tracking number generation
   const generateTrackingNumber = () => {
     return "TRK" + Math.random().toString().slice(2, 12).padStart(10, "0");
   };
@@ -124,7 +123,7 @@ exports.GetUserParcel = (req, res) => {
     if (error) {
       return res
         .status(500)
-        .json({ success: false, message: "Database error" });
+        .json({ success: false, message: error });
     } else {
       return res.status(200).json({
         totalNumber: parcel.length,

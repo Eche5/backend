@@ -33,7 +33,7 @@ exports.GetUserParcel = (req, res) => {
     if (error) {
       return res
         .status(500)
-        .json({ success: false, message: "Database error" });
+        .json({ success: false, message: error});
     } else {
       return res.status(200).json({
         success: true,
