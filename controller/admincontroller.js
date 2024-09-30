@@ -3,7 +3,7 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 exports.getAllTeamMembers = (req, res) => {
   const query =
-    "SELECT * FROM pickupman.users WHERE role NOT IN ('logistics_user', 'super_admin')";
+    "SELECT * FROM railway.users WHERE role NOT IN ('logistics_user', 'super_admin')";
 
   db.query(query, (error, users) => {
     if (error) {
@@ -23,7 +23,7 @@ exports.getAllTeamMembers = (req, res) => {
 };
 
 exports.getAllPayments = (req, res) => {
-  const query = "SELECT * FROM pickupman.payments";
+  const query = "SELECT * FROM railway.payments";
 
   db.query(query, (error, payments) => {
     if (error) {
@@ -121,7 +121,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
     product: {
       name: "Pickupman",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 Pickupman. All rights reserved.",
+      copyright: "Copyright © 2024 railway. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },

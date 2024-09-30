@@ -115,15 +115,13 @@ exports.GetUserParcel = (req, res) => {
   const id = req.user.id;
   const query = `
     SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
-    FROM pickupman.parcels 
+    FROM railway.parcels 
     INNER JOIN users ON parcels.sender_id = users.id 
     WHERE parcels.sender_id = ?;
   `;
   db.query(query, [id], (error, parcel) => {
     if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: error });
+      return res.status(500).json({ success: false, message: error });
     } else {
       return res.status(200).json({
         totalNumber: parcel.length,

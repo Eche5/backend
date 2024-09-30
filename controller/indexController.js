@@ -5,7 +5,7 @@ const walletpaymentInstance = new walletPaymentService();
 const paymentInstance = new PaymentService();
 
 exports.GetAllParcels = (req, res) => {
-  const query = "SELECT * FROM pickupman.parcels";
+  const query = "SELECT * FROM railway.parcels";
   db.query(query, (error, parcels) => {
     if (error) {
       return res
@@ -24,16 +24,14 @@ exports.GetUserParcel = (req, res) => {
   const id = req.user.id;
   const query = `
     SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
-    FROM pickupman.parcels 
+    FROM railway.parcels 
     INNER JOIN users ON parcels.sender_id = users.id 
     WHERE parcels.sender_id = ?;
   `;
 
   db.query(query, [id], (error, parcel) => {
     if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: error});
+      return res.status(500).json({ success: false, message: error });
     } else {
       return res.status(200).json({
         success: true,
@@ -450,7 +448,7 @@ const sendParcelUpdate = async (email, first_name, parcel) => {
     product: {
       name: "Pickupman",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 Pickupman. All rights reserved.",
+      copyright: "Copyright © 2024 railway. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
