@@ -6,7 +6,6 @@ exports.email = check("email")
   .withMessage("The email field cannot be empty")
   .isEmail()
   .withMessage("Enter a valid email address")
-  .normalizeEmail();
 exports.password = body("password")
   .notEmpty()
   .withMessage("The password field requires a value")
