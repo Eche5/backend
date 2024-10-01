@@ -119,7 +119,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: "Pickupman",
+      name: "Pickupmanng",
       link: "https://mailgen.js/",
       copyright: "Copyright © 2024 railway. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
@@ -153,7 +153,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
           },
         ],
       },
-      signature: "Sincerely, Pickupman Team",
+      signature: "Sincerely, Pickupmanng Team",
     },
   };
 

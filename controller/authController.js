@@ -91,7 +91,7 @@ const sendVerification = async (user) => {
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: "Pickupman",
+      name: "Pickupmanng",
       link: "https://mailgen.js/",
       copyright: "Copyright © 2024 railway. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
@@ -282,7 +282,7 @@ const sendLoginDetails = async (email, first_name, password) => {
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: "Pickupman",
+      name: "Pickupmanng",
       link: "https://railway.vercel.app",
       copyright: "Copyright © 2024 railway. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
@@ -294,7 +294,7 @@ const sendLoginDetails = async (email, first_name, password) => {
   let response = {
     body: {
       name: first_name, // Assuming `user` is an object with a `first_name` field
-      intro: "Welcome to Pickupman! Below are your login credentials.",
+      intro: "Welcome to Pickupmanng! Below are your login credentials.",
       table: {
         data: [
           {
@@ -311,7 +311,7 @@ const sendLoginDetails = async (email, first_name, password) => {
         instructions: "You can log in to your account using the button below:",
         button: {
           color: "#22BC66", // Button color
-          text: "Login to Pickupman",
+          text: "Login to Pickupmanng",
           link: "https://railway.vercel.app/login", // Your login page link
         },
       },
@@ -326,7 +326,7 @@ const sendLoginDetails = async (email, first_name, password) => {
   let message = {
     from: process.env.EMAIL,
     to: email,
-    subject: "Your Pickupman Login Details",
+    subject: "Your Pickupmanng Login Details",
     html: mail,
   };
 
