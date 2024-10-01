@@ -93,12 +93,12 @@ const sendVerification = async (user) => {
     product: {
       name: "Pickupmanng",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 railway. All rights reserved.",
+      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
   });
-  const link = `https://railway.vercel.app/dashboard/verify/${user[0].id}`;
+  const link = `https://pickupman.vercel.app/dashboard/verify/${user[0].id}`;
   let response = {
     body: {
       name: user[0].first_name,
@@ -283,8 +283,8 @@ const sendLoginDetails = async (email, first_name, password) => {
     theme: "default",
     product: {
       name: "Pickupmanng",
-      link: "https://railway.vercel.app",
-      copyright: "Copyright © 2024 railway. All rights reserved.",
+      link: "https://pickupman.vercel.app/",
+      copyright: "Copyright © 2024 Pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
@@ -312,7 +312,7 @@ const sendLoginDetails = async (email, first_name, password) => {
         button: {
           color: "#22BC66", // Button color
           text: "Login to Pickupmanng",
-          link: "https://railway.vercel.app/login", // Your login page link
+          link: "https://pickupman.vercel.app/login", // Your login page link
         },
       },
       outro:
