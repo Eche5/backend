@@ -162,7 +162,6 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   let message = {
     from: process.env.EMAIL,
     to: Array.isArray(emails) ? emails.join(",") : emails,
-    receipient,
     subject: "Parcel Status Updated",
     html: mail,
   };
