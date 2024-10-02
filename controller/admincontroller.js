@@ -3,7 +3,7 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 exports.getAllTeamMembers = (req, res) => {
   const query =
-    "SELECT * FROM railway.users WHERE role NOT IN ('logistics_user', 'super_admin')";
+    "SELECT * FROM railway.users WHERE role NOT IN ('user', 'super_admin')";
 
   db.query(query, (error, users) => {
     if (error) {
