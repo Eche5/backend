@@ -24,7 +24,7 @@ router
 router
   .route("/getShipment/:tracking_number")
   .get(
-    [auth, checkRoles(["super_admin", "processing_user"])],
+    [auth, checkRoles(["super_admin", "processing_user","logistics_user"])],
     controller.getParcelByTrackingNumber
   );
 module.exports = router;
