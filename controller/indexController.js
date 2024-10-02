@@ -167,12 +167,13 @@ exports.shippingRate = (req, res) => {
 };
 
 exports.localshippingrate = (req, res) => {
-  const { state, shipping_types, weight } = req.body;
+  const { state, shipping_types, city } = req.body;
 
   const query = `
     SELECT rate, shipping_type, duration
     FROM rate_pricing_local
     WHERE state = ?
+    AND city = ?
       AND shipping_type IN (?)
      ;
   `;
@@ -186,7 +187,7 @@ exports.localshippingrate = (req, res) => {
   };
 
   // Querying the database with the given parameters
-  db.query(query, [state, shipping_types], (error, results) => {
+  db.query(query, [state,city, shipping_types], (error, results) => {
     if (error) {
       return res
         .status(500)

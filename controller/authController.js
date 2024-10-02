@@ -98,7 +98,7 @@ const sendVerification = async (user) => {
       logoHeight: "30px",
     },
   });
-  const link = `https://pickupman.vercel.app/dashboard/verify/${user[0].id}`;
+  const link = `https://pickupman.vercel.app/verify/${user[0].id}`;
   let response = {
     body: {
       name: user[0].first_name,
