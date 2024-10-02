@@ -131,3 +131,24 @@ exports.GetUserParcel = (req, res) => {
     }
   });
 };
+
+exports.getUserDetails = (req, res) => {
+  const id = req.user.id;
+  console.log(id);
+  const query = "SELECT * FROM users where id =?";
+
+  db.query(query, [id], (error, user) => {
+    if (error) {
+      return res.state(404).json({
+        status: false,
+        msg: "database erro",
+      });
+    } else {
+      const userData = user[0];
+      return res.status(200).json({
+        status: true,
+        userData,
+      });
+    }
+  });
+};
