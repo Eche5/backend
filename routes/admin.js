@@ -18,13 +18,13 @@ router.route("/payments").get([auth, super_admin], controller.getAllPayments);
 router
   .route("/updateparcel")
   .patch(
-    [auth, checkRoles(["super_admin", "processing_user"])],
+    [auth, checkRoles(["super_admin", "processing_user", "logistics_user"])],
     controller.updateParcel
   );
 router
   .route("/getShipment/:tracking_number")
   .get(
-    [auth, checkRoles(["super_admin", "processing_user","logistics_user"])],
+    [auth, checkRoles(["super_admin", "processing_user"])],
     controller.getParcelByTrackingNumber
   );
 module.exports = router;

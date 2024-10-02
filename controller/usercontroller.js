@@ -152,3 +152,83 @@ exports.getUserDetails = (req, res) => {
     }
   });
 };
+
+exports.updateUsersDetails = (req, res) => {
+  const {
+    first_name,
+    last_name,
+    street,
+    landmark,
+    city,
+    country,
+    state,
+    postal_code,
+    phone_number,
+  } = req.body;
+  const id = req.user.id;
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      message: "user does not exist",
+    });
+  }
+  let query = "UPDATE users SET ";
+  let values = [];
+
+  if (first_name) {
+    query += "first_name = ?, ";
+    values.push(first_name);
+  }
+  if (last_name) {
+    query += "last_name = ?, ";
+    values.push(last_name);
+  }
+  if (street) {
+    query += "street = ?, ";
+    values.push(street);
+  }
+  if (state) {
+    query += "state = ?, ";
+    values.push(state);
+  }
+  if (city) {
+    query += "city = ?, ";
+    values.push(city);
+  }
+  if (landmark) {
+    query += "landmark = ?, ";
+    values.push(landmark);
+  }
+  if (country) {
+    query += "country = ?, ";
+    values.push(country);
+  }
+  if (phone_number) {
+    query += "phone_number = ?, ";
+    values.push(phone_number);
+  }
+
+  if (postal_code) {
+    query += "postal_code = ?, ";
+    values.push(postal_code);
+  }
+
+  query = query.slice(0, -2);
+
+  query += " WHERE id = ?";
+  values.push(id);
+
+  db.query(query, values, (error, user) => {
+    if (error) {
+      res.status(401).json({
+        status: false,
+        msg: "user data update failed",
+      });
+    } else {
+      res.status(200).json({
+        status: true,
+        msg: "user data successfully updated",
+      });
+    }
+  });
+};
