@@ -232,3 +232,23 @@ exports.updateUsersDetails = (req, res) => {
     }
   });
 };
+exports.getParcelByTrackingNumber = (req, res) => {
+  const { tracking_number } = req.params;
+  try {
+    const query = "SELECT * FROM ParcelTracking WHERE tracking_number = ? ORDER BY timestamp DESC";
+    db.query(query, [tracking_number], (error, parcel) => {
+      if (error) {
+        return res.status(401).json({
+          status: false,
+          msg: "shipment with this tracking number not found",
+        });
+      }
+      return res.status(200).json({
+        status: true,
+        parcel,
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};

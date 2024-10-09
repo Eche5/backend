@@ -6,5 +6,8 @@ router.route("/shipment").post([auth], controller.createshipment);
 router.route("/parcel").get([auth], controller.GetUserParcel);
 router.route("/userdata").get([auth], controller.getUserDetails);
 router.route("/updateme").patch([auth], controller.updateUsersDetails);
+router
+  .route("/getShipment/:tracking_number")
+  .get([auth], controller.getParcelByTrackingNumber);
 
 module.exports = router;

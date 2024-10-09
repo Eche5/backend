@@ -55,7 +55,8 @@ exports.updateParcel = (req, res) => {
 
   let query = "UPDATE parcels SET ";
   let values = [];
-
+  const trackquery =
+    "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
   if (parcel_weight) {
     query += "parcel_weight = ?, ";
     values.push(parcel_weight);
@@ -74,6 +75,15 @@ exports.updateParcel = (req, res) => {
   query += " WHERE tracking_number = ?";
   values.push(tracking_number);
 
+  db.query(trackquery, [tracking_number, status], (error, update) => {
+    if (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+  });
+
   db.query(query, values, async (error, parcel) => {
     if (error) {
       console.log(error);
@@ -82,6 +92,7 @@ exports.updateParcel = (req, res) => {
         .json({ success: false, message: "Database error" });
     } else {
       const selectQuery = "SELECT * FROM parcels WHERE tracking_number = ?";
+
       db.query(selectQuery, [tracking_number], async (err, parcel) => {
         if (err) {
           console.log(err);
