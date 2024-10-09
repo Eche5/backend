@@ -167,15 +167,15 @@ exports.shippingRate = (req, res) => {
 };
 
 exports.localshippingrate = (req, res) => {
-  const { state, shipping_types, city } = req.body;
-
+  const { state, shipping_types, sender_state, city } = req.body;
+  console.log(state, shipping_types, sender_state, city);
   const query = `
     SELECT rate, shipping_type, duration
     FROM rate_pricing_local
     WHERE state = ?
     AND city = ?
-      AND shipping_type IN (?)
-     ;
+    AND (sender_state = ? OR sender_state = 'lagos' OR sender_state = 'Abuja' OR sender_state = 'ALL')
+    AND shipping_type IN (?)
   `;
 
   // Static additional data
@@ -187,20 +187,51 @@ exports.localshippingrate = (req, res) => {
   };
 
   // Querying the database with the given parameters
-  db.query(query, [state,city, shipping_types], (error, results) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error", error });
-    }
+  db.query(
+    query,
+    [state, city, sender_state, shipping_types],
+    (error, results) => {
+      if (error) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error", error });
+      }
+      console.log(results);
 
-    const combinedResults = [...results, additionalData];
-    res.status(200).json({
-      success: true,
-      message: "Shipping rates found",
-      rates: combinedResults,
-    });
-  });
+      // Combine results and filter for next day shipping
+      let combinedResults = [...results];
+      // Filter next-day shipping based on sender_state and state
+      if (
+        (sender_state === "LAGOS" &&
+          state === "Abuja Federal Capital Territory") ||
+        (sender_state === "Abuja Federal Capital Territory" && state === "LAGOS")
+      ) {
+        // Allow next day shipping options
+        combinedResults = combinedResults.filter(
+          (rate) =>
+            rate.shipping_type === "next_day_doorstep" ||
+            rate.shipping_type === "next_day_terminal" ||
+            rate.shipping_type === "standard" ||
+            rate.shipping_type === "economy"
+        );
+      } else {
+        // Remove next-day shipping options
+        combinedResults = combinedResults.filter(
+          (rate) =>
+            rate.shipping_type !== "next_day_doorstep" &&
+            rate.shipping_type !== "next_day_terminal"
+        );
+      }
+
+      combinedResults.push(additionalData);
+
+      res.status(200).json({
+        success: true,
+        message: "Shipping rates found",
+        rates: combinedResults,
+      });
+    }
+  );
 };
 
 exports.startWalletFunding = async (req, res, next) => {
