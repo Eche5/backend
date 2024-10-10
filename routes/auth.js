@@ -10,7 +10,7 @@ router
   .route("/registerTeam")
   .post([auth, super_admin], controller.createTeamMembers);
 router.route("/login").post([email, password], controller.login);
-router.route("/refresh").get(controller.refresh);
+router.route("/refresh").post(controller.refresh);
 router.route("/verify").post([user], controller.resendVerificationemail);
 router.route("/verify/:id").patch([user], controller.verify);
 router.route("/logout").post(controller.LogOut);

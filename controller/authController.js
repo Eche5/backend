@@ -422,7 +422,7 @@ exports.login = async (req, res, next) => {
           res.cookie("jwt", refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "Lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           });
           return res.status(200).json({
@@ -444,19 +444,35 @@ exports.login = async (req, res, next) => {
 };
 
 exports.refresh = (req, res) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401).json({ message: "Unauthorized" });
-  const refreshToken = cookies.jwt;
+  // Check if JWT token is provided in the body or fallback to cookie
+  const jwt_token_from_body = req.body.jwt_token_from_body;
+  const jwt_token_from_cookie = req.cookies?.jwt;
 
-  jwt.verify(refreshToken, jwt_secret, async (err, decoded) => {
-    if (err) return res.status(403).json({ message: "Forbidden" });
+  // Use token from body if available, else use cookie token
+  const token = jwt_token_from_body || jwt_token_from_cookie;
+
+  if (!token) {
+    return res.status(400).json({ message: "No token provided" });
+  }
+
+  // Verify the token (whether from body or cookie)
+  jwt.verify(token, jwt_secret, async (err, decoded) => {
+    if (err) return res.status(403).json({ message: "Invalid token" });
+
+    // Query the database to find the user by the decoded email (from the token)
     const query = `SELECT * FROM users WHERE email = ?`;
     db.query(query, [decoded._id], async (error, user) => {
-      if (!user) return res.status(401).json({ message: "User unauthorized" });
+      if (error) return res.status(500).json({ message: "Database error" });
+      if (!user || user.length === 0) {
+        return res.status(401).json({ message: "User not authorized" });
+      }
+
+      // Generate a new access token
       const accessToken = jwt.sign({ _id: user[0].email }, jwt_secret, {
         expiresIn: "7d",
       });
 
+      // Send the new access token and user details back
       res.status(200).json({
         success: true,
         code: 200,
@@ -470,6 +486,8 @@ exports.refresh = (req, res) => {
     });
   });
 };
+
+
 exports.LogOut = (req, res) => {
   const cookie = req.cookies;
 
