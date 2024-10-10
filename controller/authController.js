@@ -312,7 +312,7 @@ const sendLoginDetails = async (email, first_name, password) => {
         button: {
           color: "#22BC66", // Button color
           text: "Login to Pickupmanng",
-          link: "https://pickupman.vercel.app/login", // Your login page link
+          link: "https://pickupman.vercel.app", // Your login page link
         },
       },
       outro:

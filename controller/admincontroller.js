@@ -221,3 +221,20 @@ exports.getParcelByTrackingNumber = (req, res) => {
     console.log(error);
   }
 };
+
+exports.deletedTeamMember = (req, res) => {
+  const { id } = req.body;
+
+  const query = "DELETE FROM `railway`.`users` where id = ?";
+  console.log(id);
+  db.query(query, id, (error) => {
+    if (error) {
+      res.status(404).json({
+        status: false,
+        msg: "error deleting team member",
+      });
+    } else {
+      res.status(204);
+    }
+  });
+};
