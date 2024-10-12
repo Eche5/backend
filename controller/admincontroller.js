@@ -43,8 +43,24 @@ exports.getAllPayments = (req, res) => {
 };
 
 exports.updateParcel = (req, res) => {
-  const { tracking_number, parcel_weight, status, estimated_delivery_date } =
-    req.body;
+  const {
+    tracking_number,
+    parcel_weight,
+    status,
+    estimated_delivery_date,
+    receiver_first_name,
+    receiver_last_name,
+    receiver_phone_number,
+    receiver_email,
+    receiver_street_address,
+    receiver_city,
+    receiver_landmark,
+    receiver_state,
+  } = req.body;
+  const formatDateForSQL = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0]; // Returns 'YYYY-MM-DD'
+  };
 
   if (!tracking_number) {
     return res.status(400).json({
@@ -63,7 +79,46 @@ exports.updateParcel = (req, res) => {
   }
   if (estimated_delivery_date) {
     query += "estimated_delivery_date = ?, ";
-    values.push(estimated_delivery_date);
+    const estimatedDeliveryDate = formatDateForSQL(estimated_delivery_date);
+    values.push(estimatedDeliveryDate);
+  }
+  if (receiver_first_name) {
+    query += "receiver_first_name = ?, ";
+    values.push(receiver_first_name);
+  }
+  if (receiver_last_name) {
+    query += "receiver_last_name = ?, ";
+    values.push(receiver_last_name);
+  }
+  if (receiver_city) {
+    query += "receiver_city = ?, ";
+    values.push(receiver_city);
+  }
+  if (receiver_email) {
+    query += "receiver_email = ?, ";
+    values.push(receiver_email);
+  }
+  if (receiver_street_address) {
+    query += "receiver_street_address = ?, ";
+    values.push(receiver_street_address);
+  }
+  if (receiver_state) {
+    query += "receiver_state = ?, ";
+    values.push(receiver_state);
+  }
+  if (receiver_landmark) {
+    query += "receiver_landmark = ?, ";
+    values.push(receiver_landmark);
+  }
+
+  if (receiver_email) {
+    query += "receiver_email = ?, ";
+    values.push(receiver_email);
+  }
+
+  if (receiver_phone_number) {
+    query += "receiver_phone_number = ?, ";
+    values.push(receiver_phone_number);
   }
   if (status) {
     query += "status = ?, ";

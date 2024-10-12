@@ -186,7 +186,6 @@ exports.localshippingrate = (req, res) => {
       "4-5 business days after the drop-off day (weekends and public holidays not included)",
   };
 
-  // Querying the database with the given parameters
   db.query(
     query,
     [state, city, sender_state, shipping_types],
@@ -196,17 +195,13 @@ exports.localshippingrate = (req, res) => {
           .status(500)
           .json({ success: false, message: "Database error", error });
       }
-      console.log(results);
 
-      // Combine results and filter for next day shipping
       let combinedResults = [...results];
-      // Filter next-day shipping based on sender_state and state
       if (
         (sender_state === "LAGOS" &&
           state === "Abuja Federal Capital Territory") ||
         (sender_state === "Abuja Federal Capital Territory" && state === "LAGOS")
       ) {
-        // Allow next day shipping options
         combinedResults = combinedResults.filter(
           (rate) =>
             rate.shipping_type === "next_day_doorstep" ||
