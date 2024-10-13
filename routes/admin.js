@@ -21,13 +21,29 @@ router
 router
   .route("/updateparcel")
   .patch(
-    [auth, checkRoles(["super_admin", "processing_user", "logistics_user"])],
+    [
+      auth,
+      checkRoles([
+        "super_admin",
+        "processing_user",
+        "logistics_user",
+        "customers_rep",
+      ]),
+    ],
     controller.updateParcel
   );
 router
   .route("/getShipment/:tracking_number")
   .get(
-    [auth, checkRoles(["super_admin", "processing_user", "logistics_user"])],
+    [
+      auth,
+      checkRoles([
+        "super_admin",
+        "processing_user",
+        "logistics_user",
+        "customers_rep",
+      ]),
+    ],
     controller.getParcelByTrackingNumber
   );
 module.exports = router;

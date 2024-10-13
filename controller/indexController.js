@@ -198,9 +198,9 @@ exports.localshippingrate = (req, res) => {
 
       let combinedResults = [...results];
       if (
-        (sender_state === "LAGOS" &&
+        (sender_state === "Lagos" &&
           state === "Abuja Federal Capital Territory") ||
-        (sender_state === "Abuja Federal Capital Territory" && state === "LAGOS")
+        (sender_state === "Abuja Federal Capital Territory" && state === "Lagos")
       ) {
         combinedResults = combinedResults.filter(
           (rate) =>
