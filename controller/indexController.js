@@ -195,7 +195,6 @@ exports.localshippingrate = (req, res) => {
           .status(500)
           .json({ success: false, message: "Database error", error });
       }
-
       let combinedResults = [...results];
       if (
         (sender_state === "Lagos" &&
@@ -214,7 +213,9 @@ exports.localshippingrate = (req, res) => {
         combinedResults = combinedResults.filter(
           (rate) =>
             rate.shipping_type !== "next_day_doorstep" &&
-            rate.shipping_type !== "next_day_terminal"
+            rate.shipping_type !== "next_day_terminal"&&
+            rate.shipping_type === "economy"
+
         );
       }
 
