@@ -8,6 +8,6 @@ router.route("/userdata").get([auth], controller.getUserDetails);
 router.route("/updateme").patch([auth], controller.updateUsersDetails);
 router
   .route("/getShipment/:tracking_number")
-  .get([auth], controller.getParcelByTrackingNumber);
+  .get(controller.getParcelByTrackingNumber);
 
 module.exports = router;
