@@ -46,4 +46,7 @@ router
     ],
     controller.getParcelByTrackingNumber
   );
+router
+  .route("/sendmail")
+  .post([auth, super_admin], controller.sendEmailsToUsers);
 module.exports = router;

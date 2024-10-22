@@ -293,3 +293,88 @@ exports.deletedTeamMember = (req, res) => {
     }
   });
 };
+
+exports.sendEmailsToUsers = (req, res) => {
+  const { message, subject } = req.body;
+  const query = 'SELECT * FROM users WHERE role = "user"';
+
+  db.query(query, async (error, result) => {
+    if (error) {
+      return res.status(404).json({
+        status: false,
+        msg: "Database error",
+      });
+    }
+
+    const sendResults = await sendEmails(result, message, subject);
+
+    if (sendResults) {
+      res.status(200).json({
+        status: true,
+        msg: "Emails sent successfully",
+      });
+    } else {
+      res.status(500).json({
+        status: false,
+        msg: "Failed to send some emails",
+      });
+    }
+  });
+};
+
+const sendEmails = async (users, message, subject) => {
+  let MailGenerator = new Mailgen({
+    theme: "default",
+    product: {
+      name: "Pickupmanng",
+      link: "https://mailgen.js/",
+      copyright: "Copyright © 2024 railway. All rights reserved.",
+      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
+      logoHeight: "30px",
+    },
+  });
+
+  const transporter = nodemailer.createTransport({
+    host: "mail.pickupmanng.ng",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  let allSuccess = true;
+
+  for (let user of users) {
+    const response = {
+      body: {
+        name: user.first_name,
+        intro: message,
+        signature: "Sincerely, Pickupmanng Team",
+      },
+    };
+
+    const mailContent = MailGenerator.generate(response);
+
+    const emailMessage = {
+      from: process.env.EMAIL,
+      to: user.email,
+      subject,
+      html: mailContent,
+    };
+
+    try {
+      const info = await transporter.sendMail(emailMessage);
+      console.log(`Email sent to ${user.email}:`, info.response);
+    } catch (err) {
+      console.error(`Error sending email to ${user.email}:`, err);
+      allSuccess = false;
+    }
+  }
+
+  return allSuccess;
+};
