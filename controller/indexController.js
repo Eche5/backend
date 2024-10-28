@@ -178,13 +178,13 @@ exports.localshippingrate = (req, res) => {
     AND shipping_type IN (?)
   `;
 
-  // // Static additional data
-  // const additionalData = {
-  //   shipping_type: "standard",
-  //   rate: "6950.00",
-  //   duration:
-  //     "4-5 business days after the drop-off day (weekends and public holidays not included)",
-  // };
+  // Static additional data
+  const additionalData = {
+    shipping_type: "standard",
+    rate: "8700.00",
+    duration:
+      "4-5 business days after the drop-off day (weekends and public holidays not included)",
+  };
 
   db.query(
     query,
