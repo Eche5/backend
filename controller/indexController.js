@@ -195,11 +195,12 @@ exports.localshippingrate = (req, res) => {
           .status(500)
           .json({ success: false, message: "Database error", error });
       }
-      let combinedResults = [...results];
+      let combinedResults = [...results, additionalData];
       if (
         (sender_state === "Lagos" &&
           state === "Abuja Federal Capital Territory") ||
-        (sender_state === "Abuja Federal Capital Territory" && state === "Lagos")
+        (sender_state === "Abuja Federal Capital Territory" &&
+          state === "Lagos")
       ) {
         combinedResults = combinedResults.filter(
           (rate) =>
@@ -213,12 +214,10 @@ exports.localshippingrate = (req, res) => {
         combinedResults = combinedResults.filter(
           (rate) =>
             rate.shipping_type !== "next_day_doorstep" &&
-            rate.shipping_type !== "next_day_terminal"&&
+            rate.shipping_type !== "next_day_terminal" &&
             rate.shipping_type === "economy"
-
         );
       }
-
 
       res.status(200).json({
         success: true,
