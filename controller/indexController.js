@@ -174,7 +174,7 @@ exports.localshippingrate = (req, res) => {
     FROM rate_pricing_local
     WHERE state = ?
     AND city = ?
-    AND (sender_state = ? OR sender_state = 'lagos' OR sender_state = 'Abuja' OR sender_state = 'ALL')
+    AND (sender_state = ? OR sender_state = 'lagos' OR sender_state = 'Abuja'  OR sender_state = 'ALL')
     AND shipping_type IN (?)
   `;
 
@@ -200,7 +200,11 @@ exports.localshippingrate = (req, res) => {
         (sender_state === "Lagos" &&
           state === "Abuja Federal Capital Territory") ||
         (sender_state === "Abuja Federal Capital Territory" &&
-          state === "Lagos")
+          state === "Lagos") ||
+        (city == "Port Harcourt" &&
+          sender_state === "Abuja Federal Capital Territory") ||
+        (city == "Port Harcourt" &&
+          sender_state === "Lagos" )
       ) {
         combinedResults = combinedResults.filter(
           (rate) =>
