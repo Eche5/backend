@@ -117,7 +117,7 @@ exports.createPayment = async (req, res, next) => {
       db.query(
         updateQuery,
         [order.payment_status, response.tracking_number],
-        (updateError) => {
+        async (updateError) => {
           if (updateError) {
             return res.status(500).json({
               success: false,
@@ -125,7 +125,11 @@ exports.createPayment = async (req, res, next) => {
               error: updateError,
             });
           }
-
+          await sendParcelUpdate(
+            req.user.email,
+            req.user.first_name,
+            tracking_number
+          );
           res.status(201).json({
             success: true,
             status: "Payment Created",
@@ -168,7 +172,6 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
-  console.log(state, shipping_types, sender_state, city);
   const query = `
     SELECT rate, shipping_type, duration
     FROM rate_pricing_local
@@ -203,8 +206,7 @@ exports.localshippingrate = (req, res) => {
           state === "Lagos") ||
         (city == "Port Harcourt" &&
           sender_state === "Abuja Federal Capital Territory") ||
-        (city == "Port Harcourt" &&
-          sender_state === "Lagos" )
+        (city == "Port Harcourt" && sender_state === "Lagos")
       ) {
         combinedResults = combinedResults.filter(
           (rate) =>
@@ -448,7 +450,7 @@ exports.payThroughWallet = (req, res) => {
             db.query(
               updateQuery,
               [shipping_fee, req.user.email],
-              (updateError) => {
+              async (updateError) => {
                 if (updateError) {
                   return res.status(500).json({
                     success: false,
@@ -456,7 +458,11 @@ exports.payThroughWallet = (req, res) => {
                     error: updateError,
                   });
                 }
-
+                await sendParcelUpdate(
+                  req.user.email,
+                  req.user.first_name,
+                  tracking_number
+                );
                 return res.status(201).json({
                   success: true,
                   code: 200,
@@ -473,7 +479,7 @@ exports.payThroughWallet = (req, res) => {
   });
 };
 
-const sendParcelUpdate = async (email, first_name, parcel) => {
+const sendParcelUpdate = async (email, first_name, tracking_number) => {
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -488,12 +494,12 @@ const sendParcelUpdate = async (email, first_name, parcel) => {
   let response = {
     body: {
       name: first_name,
-      intro: `Your shipment with tracking number ${parcel.tracking_number} has been confirmed.`,
+      intro: `Your shipment with tracking number ${tracking_number} has been confirmed. Kindly ensure to write the tracking number on your parcel before bringing it to our office.`,
       table: {
         data: [
           {
             Item: "Tracking Number",
-            Detail: parcel.tracking_number,
+            Detail: tracking_number,
           },
         ],
       },
