@@ -7,7 +7,7 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 
 exports.GetAllParcels = (req, res) => {
-  const query = "SELECT * FROM railway.parcels";
+  const query = "SELECT * FROM pickupman.parcels";
   db.query(query, (error, parcels) => {
     if (error) {
       return res
@@ -26,7 +26,7 @@ exports.GetUserParcel = (req, res) => {
   const id = req.user.id;
   const query = `
     SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
-    FROM railway.parcels 
+    FROM pickupman.parcels 
     INNER JOIN users ON parcels.sender_id = users.id 
     WHERE parcels.sender_id = ?;
   `;
@@ -487,7 +487,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number) => {
     product: {
       name: "Pickupmanng",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 railway. All rights reserved.",
+      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
@@ -519,7 +519,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "mail.pickupmanng.ng",
+    host: "sheep.blankipanel.com",
     port: 465,
     secure: true,
     auth: {

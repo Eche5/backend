@@ -115,7 +115,7 @@ exports.GetUserParcel = (req, res) => {
   const id = req.user.id;
   const query = `
     SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
-    FROM railway.parcels 
+    FROM pickupman.parcels 
     INNER JOIN users ON parcels.sender_id = users.id 
     WHERE parcels.sender_id = ?;
   `;

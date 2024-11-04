@@ -3,13 +3,13 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 exports.getAllTeamMembers = (req, res) => {
   const query =
-    "SELECT * FROM railway.users WHERE role NOT IN ('user', 'super_admin')";
+    "SELECT * FROM pickupman.users WHERE role NOT IN ('user', 'super_admin')";
 
   db.query(query, (error, users) => {
     if (error) {
       return res
         .status(500)
-        .json({ success: false, message: "Database error" });
+        .json({ success: false, message: error });
     } else {
       return res.status(200).json({
         success: true,
@@ -23,7 +23,7 @@ exports.getAllTeamMembers = (req, res) => {
 };
 
 exports.getAllPayments = (req, res) => {
-  const query = "SELECT * FROM railway.payments";
+  const query = "SELECT * FROM pickupman.payments";
 
   db.query(query, (error, payments) => {
     if (error) {
@@ -187,7 +187,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
     product: {
       name: "Pickupmanng",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 railway. All rights reserved.",
+      copyright: "Copyright © 2024 pic. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
@@ -233,7 +233,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "mail.pickupmanng.ng",
+    host: "sheep.blankipanel.com",
     port: 465,
     secure: true,
     auth: {
@@ -280,7 +280,7 @@ exports.getParcelByTrackingNumber = (req, res) => {
 exports.deletedTeamMember = (req, res) => {
   const { id } = req.body;
 
-  const query = "DELETE FROM `railway`.`users` where id = ?";
+  const query = "DELETE FROM `pickupman`.`users` where id = ?";
   console.log(id);
   db.query(query, id, (error) => {
     if (error) {
@@ -328,14 +328,14 @@ const sendEmails = async (users, message, subject) => {
     product: {
       name: "Pickupmanng",
       link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 railway. All rights reserved.",
+      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
   });
 
   const transporter = nodemailer.createTransport({
-    host: "mail.pickupmanng.ng",
+    host: "sheep.blankipanel.com",
     port: 465,
     secure: true,
     auth: {

@@ -333,7 +333,7 @@ const sendLoginDetails = async (email, first_name, password) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "mail.pickupmanng.ng",
+    host: "sheep.blankipanel.com",
     port: 465,
     secure: true,
     auth: {
