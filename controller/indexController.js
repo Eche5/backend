@@ -3,6 +3,8 @@ const PaymentService = require("../services/payment");
 const walletPaymentService = require("../services/walletPayment");
 const walletpaymentInstance = new walletPaymentService();
 const paymentInstance = new PaymentService();
+const Mailgen = require("mailgen");
+const nodemailer = require("nodemailer");
 
 exports.GetAllParcels = (req, res) => {
   const query = "SELECT * FROM railway.parcels";
