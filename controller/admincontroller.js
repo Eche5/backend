@@ -7,9 +7,7 @@ exports.getAllTeamMembers = (req, res) => {
 
   db.query(query, (error, users) => {
     if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: error });
+      return res.status(500).json({ success: false, message: error });
     } else {
       return res.status(200).json({
         success: true,
@@ -57,6 +55,7 @@ exports.updateParcel = (req, res) => {
     receiver_landmark,
     receiver_state,
   } = req.body;
+
   const formatDateForSQL = (dateString) => {
     const date = new Date(dateString);
     return date.toISOString().split("T")[0]; // Returns 'YYYY-MM-DD'
@@ -71,8 +70,7 @@ exports.updateParcel = (req, res) => {
 
   let query = "UPDATE parcels SET ";
   let values = [];
-  const trackquery =
-    "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
+
   if (parcel_weight) {
     query += "parcel_weight = ?, ";
     values.push(parcel_weight);
@@ -110,12 +108,6 @@ exports.updateParcel = (req, res) => {
     query += "receiver_landmark = ?, ";
     values.push(receiver_landmark);
   }
-
-  if (receiver_email) {
-    query += "receiver_email = ?, ";
-    values.push(receiver_email);
-  }
-
   if (receiver_phone_number) {
     query += "receiver_phone_number = ?, ";
     values.push(receiver_phone_number);
@@ -125,35 +117,40 @@ exports.updateParcel = (req, res) => {
     values.push(status);
   }
 
-  query = query.slice(0, -2);
-
+  query = query.slice(0, -2); // Remove trailing comma and space
   query += " WHERE tracking_number = ?";
   values.push(tracking_number);
 
-  db.query(trackquery, [tracking_number, status], (error, update) => {
+  const trackquery =
+    "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
+
+  // Insert into tracking and update parcel
+  db.query(trackquery, [tracking_number, status], (error) => {
     if (error) {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Database error" });
+        .json({ success: false, message: "Database error in tracking update" });
     }
-  });
 
-  db.query(query, values, async (error, parcel) => {
-    if (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    } else {
+    // Update the parcel table
+    db.query(query, values, (error) => {
+      if (error) {
+        console.log(error);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error in parcel update" });
+      }
+
+      // Select updated parcel
       const selectQuery = "SELECT * FROM parcels WHERE tracking_number = ?";
-
       db.query(selectQuery, [tracking_number], async (err, parcel) => {
         if (err) {
           console.log(err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Database error" });
+          return res.status(500).json({
+            success: false,
+            message: "Database error in fetching parcel",
+          });
         }
 
         if (parcel.length === 0) {
@@ -161,23 +158,23 @@ exports.updateParcel = (req, res) => {
             .status(404)
             .json({ success: false, message: "Parcel not found" });
         }
-        // Now, send the updated parcel via email if needed
+
+        // Send the parcel update notification
         await sendParcelUpdate(
           [parcel[0].email, parcel[0].receiver_email],
           parcel[0].first_name,
           parcel[0]
         );
 
-        // Return the updated parcel to the client
         return res.status(200).json({
           success: true,
           code: 200,
-          parcel: parcel[0], // Return the first (and only) parcel from the result set
+          parcel: parcel[0],
           status: "success",
           msg: `Updated parcel successfully`,
         });
       });
-    }
+    });
   });
 };
 
@@ -281,7 +278,6 @@ exports.deletedTeamMember = (req, res) => {
   const { id } = req.body;
 
   const query = "DELETE FROM `pickupman`.`users` where id = ?";
-  console.log(id);
   db.query(query, id, (error) => {
     if (error) {
       res.status(404).json({
@@ -289,7 +285,10 @@ exports.deletedTeamMember = (req, res) => {
         msg: "error deleting team member",
       });
     } else {
-      res.status(204);
+      res.status(204).json({
+        status: true,
+        msg: "Team member deleted successfully",
+      });
     }
   });
 };
