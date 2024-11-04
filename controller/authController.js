@@ -98,6 +98,7 @@ const sendVerification = async (user) => {
       logoHeight: "30px",
     },
   });
+  console.log(user)
   const link = `https://pickupman.vercel.app/verify/${user[0].id}`;
   let response = {
     body: {
@@ -124,18 +125,19 @@ const sendVerification = async (user) => {
     html: mail,
   };
 
-  const transporter = nodemailer.createTransport({
-    host: "mail.pickupmanng.ng",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+const transporter = nodemailer.createTransport({
+  host: "sheep.blankipanel.com",
+  port: 587,
+  secure: false, 
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
 
   try {
     const info = await transporter.sendMail(message);
