@@ -217,17 +217,15 @@ exports.localshippingrate = (req, res) => {
             rate.shipping_type === "economy"
         );
       } else {
-        // Remove next-day shipping options
         combinedResults = combinedResults.filter(
           (rate) =>
-            rate.shipping_type !== "next_day_doorstep" &&
+            rate.shipping_type === "next_day_doorstep" &&
             rate.shipping_type !== "next_day_terminal" &&
             rate.shipping_type === "economy"
         );
       }
       combinedResults.push(additionalData);
 
-      console.log(combinedResults);
       res.status(200).json({
         success: true,
         message: "Shipping rates found",

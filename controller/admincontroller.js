@@ -264,6 +264,7 @@ exports.getParcelByTrackingNumber = (req, res) => {
           msg: "shipment with this tracking number not found",
         });
       }
+      console.log(parcel);
       return res.status(200).json({
         status: true,
         parcel,
