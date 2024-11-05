@@ -174,16 +174,15 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
+  console.log(state, shipping_types, sender_state, city);
   const query = `
-    SELECT rate, shipping_type, duration
-    FROM rate_pricing_local
-    WHERE state = ?
-    AND city = ?
-    AND (sender_state = ? OR sender_state = 'lagos' OR sender_state = 'Abuja'  OR sender_state = 'ALL')
+  SELECT rate, shipping_type, duration
+  FROM rate_pricing_local
+  WHERE state = ?
+    AND (sender_state = ? OR sender_state = 'Lagos' OR sender_state = 'Abuja' OR sender_state = 'ALL')
     AND shipping_type IN (?)
-  `;
+`;
 
-  // Static additional data
   const additionalData = {
     shipping_type: "standard",
     rate: "8700.00",
@@ -191,48 +190,48 @@ exports.localshippingrate = (req, res) => {
       "4-5 business days after the drop-off day (weekends and public holidays not included)",
   };
 
-  db.query(
-    query,
-    [state, city, sender_state, shipping_types],
-    (error, results) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error", error });
-      }
-      let combinedResults = [...results];
-      if (
-        (sender_state === "Lagos" &&
-          state === "Abuja Federal Capital Territory") ||
-        (sender_state === "Abuja Federal Capital Territory" &&
-          state === "Lagos") ||
-        (city == "Port Harcourt" &&
-          sender_state === "Abuja Federal Capital Territory") ||
-        (city == "Port Harcourt" && sender_state === "Lagos")
-      ) {
-        combinedResults = combinedResults.filter(
-          (rate) =>
-            rate.shipping_type === "next_day_doorstep" ||
-            rate.shipping_type === "next_day_terminal" ||
-            rate.shipping_type === "economy"
-        );
-      } else {
-        combinedResults = combinedResults.filter(
-          (rate) =>
-            rate.shipping_type === "next_day_doorstep" &&
-            rate.shipping_type !== "next_day_terminal" &&
-            rate.shipping_type === "economy"
-        );
-      }
-      combinedResults.push(additionalData);
-
-      res.status(200).json({
-        success: true,
-        message: "Shipping rates found",
-        rates: combinedResults, // Return the combined results
-      });
+  db.query(query, [state, sender_state, shipping_types], (error, results) => {
+    if (error) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error", error });
     }
-  );
+    let combinedResults = [...results];
+    console.log(combinedResults);
+    console.log(city, sender_state);
+    if (
+      (city === "Abuja" && sender_state === "Lagos") ||
+      (city === "Port Harcourt" && sender_state === "Lagos") ||
+      (city === "Port Harcourt" && sender_state === "Abuja") ||
+      (city === "Lagos" && sender_state === "Abuja")
+    ) {
+      combinedResults = combinedResults.filter(
+        (rate) =>
+          rate.shipping_type === "next_day_doorstep" ||
+          rate.shipping_type === "next_day_terminal" ||
+          rate.shipping_type === "economy"
+      );
+    } else if (
+      city === "Port Harcourt" &&
+      sender_state !== "Lagos" &&
+      sender_state !== "Abuja"
+    ) {
+      combinedResults = combinedResults.filter(
+        (rate) => rate.shipping_type === "economy"
+      );
+    } else {
+      combinedResults = combinedResults.filter(
+        (rate) => rate.shipping_type !== "next_day_terminal"
+      );
+    }
+    combinedResults.push(additionalData);
+
+    res.status(200).json({
+      success: true,
+      message: "Shipping rates found",
+      rates: combinedResults, // Return the combined results
+    });
+  });
 };
 
 exports.startWalletFunding = async (req, res, next) => {
