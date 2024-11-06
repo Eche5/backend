@@ -378,3 +378,23 @@ const sendEmails = async (users, message, subject) => {
 
   return allSuccess;
 };
+
+
+exports.getAllRegisteredUsers = (req, res) => {
+  const query =
+    "SELECT * FROM pickupman.users WHERE role = 'user' ";
+
+  db.query(query, (error, users) => {
+    if (error) {
+      return res.status(500).json({ success: false, message: error });
+    } else {
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        users,
+        status: "success",
+        msg: `fetched team members`,
+      });
+    }
+  });
+};

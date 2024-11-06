@@ -46,6 +46,10 @@ router
     ],
     controller.getParcelByTrackingNumber
   );
+
+router
+  .route("/registeredUsers")
+  .get([auth, super_admin], controller.getAllRegisteredUsers);
 router
   .route("/sendmail")
   .post([auth, super_admin], controller.sendEmailsToUsers);
