@@ -179,7 +179,7 @@ exports.localshippingrate = (req, res) => {
   SELECT rate, shipping_type, duration
   FROM rate_pricing_local
   WHERE state = ?
-    AND (sender_state = ? OR sender_state = 'Lagos' OR sender_state = 'Abuja' OR sender_state = 'ALL')
+    AND (sender_state = ? OR sender_state = 'ALL')
     AND shipping_type IN (?)
 `;
 
@@ -212,12 +212,14 @@ exports.localshippingrate = (req, res) => {
           rate.shipping_type === "economy"
       );
     } else if (
-      city === "Port Harcourt" &&
-      sender_state !== "Lagos" &&
+      city === "Port Harcourt" ||
+      sender_state !== "Lagos" ||
       sender_state !== "Abuja"
     ) {
       combinedResults = combinedResults.filter(
-        (rate) => rate.shipping_type === "economy"
+        (rate) =>
+          rate.shipping_type === "economy" ||
+          rate.shipping_type === "next_day_doorstep"
       );
     } else {
       combinedResults = combinedResults.filter(
