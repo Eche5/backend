@@ -8,7 +8,7 @@ router.route("/parcels").get(controller.GetAllParcels);
 router.route("/parcel").get([auth], controller.GetUserParcel);
 router
   .route("/payment")
-  .get(controller.createPayment)
+  .get([auth], controller.createPayment)
   .post([auth], controller.startPayment);
 
 router

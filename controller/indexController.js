@@ -97,6 +97,7 @@ exports.createPayment = async (req, res, next) => {
     const response = await paymentInstance.createPayment(req.query);
     const newStatus = response?.status === "success" ? "Paid" : "Failed";
     const query = "SELECT * FROM parcels WHERE tracking_number = ?";
+    // console.log(response);
     db.query(query, [response.tracking_number], async (error, results) => {
       if (error) {
         return res
@@ -119,7 +120,7 @@ exports.createPayment = async (req, res, next) => {
       db.query(
         updateQuery,
         [order.payment_status, response.tracking_number],
-        async (updateError) => {
+        async (updateError, result) => {
           if (updateError) {
             return res.status(500).json({
               success: false,
@@ -130,12 +131,13 @@ exports.createPayment = async (req, res, next) => {
           await sendParcelUpdate(
             req.user.email,
             req.user.first_name,
-            tracking_number
+            response.tracking_number,
+            results[0].state
           );
           res.status(201).json({
             success: true,
             status: "Payment Created",
-            data: { payment: response, order },
+            data: { payment: response, order, state: results[0]?.state },
           });
         }
       );
@@ -174,7 +176,6 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
-  console.log(state, shipping_types, sender_state, city);
   const query = `
   SELECT rate, shipping_type, duration
   FROM rate_pricing_local
@@ -197,8 +198,6 @@ exports.localshippingrate = (req, res) => {
         .json({ success: false, message: "Database error", error });
     }
     let combinedResults = [...results];
-    console.log(combinedResults);
-    console.log(city, sender_state);
     if (
       (city === "Abuja" && sender_state === "Lagos") ||
       (city === "Port Harcourt" && sender_state === "Lagos") ||
@@ -436,7 +435,6 @@ exports.payThroughWallet = (req, res) => {
         ],
         (error, result) => {
           if (error) {
-            console.log(result);
             console.error("Error inserting shipment:", error);
             return res.status(500).json({
               success: false,
@@ -480,7 +478,50 @@ exports.payThroughWallet = (req, res) => {
   });
 };
 
-const sendParcelUpdate = async (email, first_name, tracking_number) => {
+const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
+  const dropOffLocations = [
+    {
+      city: "Yaba",
+      state: "Lagos",
+      address:
+        "Shop A3039, 2nd Floor, Tejuosho Ultra Modern Market, Phase 1, Yaba, Lagos State",
+      note: "Staff are not permitted to leave the office to receive parcels outside.",
+      hours: "Offices are open from 9 am to 5 pm.",
+      contact: {
+        locationName: "Lagos",
+        phone: "08141892503",
+      },
+    },
+    {
+      city: "Port Harcourt",
+      state: "Rivers",
+      address: "HONEYMOON PLAZA, No 14 Rumuola Rd, Rurowolukwo, Port Harcourt",
+      note: "Staff are not permitted to leave the office to receive parcels outside.",
+      hours: "Offices are open from 9 am to 5 pm.",
+      contact: {
+        locationName: "PHC",
+        phone: "07062021236",
+      },
+    },
+    {
+      city: "Abuja",
+      state: "Abuja Federal Capital Territory",
+      address:
+        "Suite BX2, Ground Floor, Zitel Plaza, located beside Chida Hotel Utako",
+      note: "Staff are not permitted to leave the office to receive parcels outside.",
+      hours: "Offices are open from 9 am to 5 pm.",
+      contact: {
+        locationName: "Abuja",
+        phone: "08137167867",
+      },
+    },
+  ];
+
+  const location = dropOffLocations.find((loc) => loc.state === state);
+  const locationDetails = location
+    ? `You can drop off your package at ${location.address}. ${location.note} Offices are open from 9 am to 5 pm. Contact: ${location.contact.locationName} - ${location.contact.phone}`
+    : "Please check with our nearest office for drop-off locations.";
+
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -495,7 +536,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number) => {
   let response = {
     body: {
       name: first_name,
-      intro: `Your shipment with tracking number ${tracking_number} has been confirmed. Kindly ensure to write the tracking number on your parcel before bringing it to our office.`,
+      intro: `Your shipment with tracking number ${tracking_number} has been confirmed. Kindly ensure to write the tracking number on your parcel before bringing it to our office. ${locationDetails}`,
       table: {
         data: [
           {
@@ -504,7 +545,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number) => {
           },
         ],
       },
-      signature: "Sincerely, Pickupmanng Team",
+      signature: "Sincerely,",
     },
   };
 
