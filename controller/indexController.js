@@ -7,7 +7,7 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 
 exports.GetAllParcels = (req, res) => {
-  const query = "SELECT * FROM pickupman.parcels";
+  const query = "SELECT * FROM pickupman.parcels where payment_status ='paid'";
   db.query(query, (error, parcels) => {
     if (error) {
       return res
@@ -176,6 +176,7 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
+  console.log(state, shipping_types, sender_state, city )
   const query = `
   SELECT rate, shipping_type, duration
   FROM rate_pricing_local
@@ -197,6 +198,7 @@ exports.localshippingrate = (req, res) => {
         .status(500)
         .json({ success: false, message: "Database error", error });
     }
+    console.log(results)
     let combinedResults = [...results];
     if (
       (city === "Abuja" && sender_state === "Lagos") ||

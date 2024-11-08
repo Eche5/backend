@@ -100,7 +100,7 @@ const sendVerification = async (user) => {
     },
   });
   console.log(user)
-  const link = `https://pickupman.vercel.app/verify/${user[0].id}`;
+  const link = `https://www.pickupmanng.ng/verify/${user[0].id}`;
   let response = {
     body: {
       name: user[0].first_name,
@@ -286,7 +286,7 @@ const sendLoginDetails = async (email, first_name, password) => {
     theme: "default",
     product: {
       name: "Pickupmanng",
-      link: "https://pickupman.vercel.app/",
+      link: "https://www.pickupmanng.ng",
       copyright: "Copyright © 2024 Pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
@@ -315,7 +315,7 @@ const sendLoginDetails = async (email, first_name, password) => {
         button: {
           color: "#22BC66", // Button color
           text: "Login to Pickupmanng",
-          link: "https://pickupman.vercel.app", // Your login page link
+          link: "https://www.pickupmanng.ng", // Your login page link
         },
       },
       outro:
