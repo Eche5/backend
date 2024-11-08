@@ -42,6 +42,8 @@ router
         "processing_user",
         "logistics_user",
         "customers_rep",
+        "sub_admin",
+        "sub_logistics_admin"
       ]),
     ],
     controller.getParcelByTrackingNumber
