@@ -97,7 +97,6 @@ exports.createPayment = async (req, res, next) => {
     const response = await paymentInstance.createPayment(req.query);
     const newStatus = response?.status === "success" ? "Paid" : "Failed";
     const query = "SELECT * FROM parcels WHERE tracking_number = ?";
-    // console.log(response);
     db.query(query, [response.tracking_number], async (error, results) => {
       if (error) {
         return res
@@ -176,7 +175,7 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
-  console.log(state, shipping_types, sender_state, city )
+  console.log(state, shipping_types, sender_state, city);
   const query = `
   SELECT rate, shipping_type, duration
   FROM rate_pricing_local
@@ -198,7 +197,7 @@ exports.localshippingrate = (req, res) => {
         .status(500)
         .json({ success: false, message: "Database error", error });
     }
-    console.log(results)
+    console.log(results);
     let combinedResults = [...results];
     if (
       (city === "Abuja" && sender_state === "Lagos") ||

@@ -48,57 +48,62 @@ module.exports = class PaymentService {
         status,
         tracking_number,
       };
+
       const query = "SELECT * FROM payments WHERE reference = ?";
+      db.query(query, [reference], (error, result) => {
+        if (error) {
+          console.error("Error checking existing payment:", error);
+          return;
+        }
 
-      const existingPayment = await new Promise((resolve, reject) => {
-        db.query(query, [reference], (error, result) => {
-          if (error) {
-            return reject(error);
-          }
-          resolve(result[0]);
-        });
-      });
-      let payment;
-
-      if (existingPayment) {
-        const updateQuery =
-          "UPDATE payments SET status = ? WHERE reference = ?";
-        await new Promise((resolve, reject) => {
-          db.query(updateQuery, [status, reference], (error, result) => {
-            if (error) {
-              return reject(error);
-            }
-            resolve(result);
-          });
-        });
-
-        payment = { ...existingPayment, status };
-      } else {
-        const insertQuery = `
-        INSERT INTO payments (reference, amount, email, full_name, status, tracking_number) 
-        VALUES (?, ?, ?, ?, ?, ?)`;
-        let wallet_amount = Number(amount) / 100;
-
-        await new Promise((resolve, reject) => {
+        if (result && result.length > 0) {
+          // Payment exists, so update it
+          const updateQuery =
+            "UPDATE payments SET status = ? WHERE reference = ?";
           db.query(
-            insertQuery,
-            [reference, wallet_amount, email, full_name, status, tracking_number],
-            (error, result) => {
-              if (error) {
-                return reject(error);
+            updateQuery,
+            [status, reference],
+            (updateError, updateResult) => {
+              if (updateError) {
+                console.error("Error updating payment status:", updateError);
+                return;
               }
-              resolve(result);
+
+              console.log("Payment updated:", updateResult);
             }
           );
-        });
+        } else {
+          // Payment does not exist, so insert it
+          const insertQuery = `
+          INSERT INTO payments (reference, amount, email, full_name, status, tracking_number) 
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+          db.query(
+            insertQuery,
+            [
+              reference,
+              newPayment.amount,
+              email,
+              full_name,
+              status,
+              tracking_number,
+            ],
+            (insertError, insertResult) => {
+              if (insertError) {
+                console.error("Error inserting new payment:", insertError);
+                return;
+              }
 
-        payment = newPayment;
-      }
+              console.log("New payment inserted:", insertResult);
+            }
+          );
+        }
+      });
 
-      return payment; 
+      return newPayment;
     } catch (error) {
       error.source = "Create Payment Service";
-      throw error; 
+      throw error;
     }
   }
 
@@ -106,7 +111,15 @@ module.exports = class PaymentService {
     return new Promise(async (resolve, reject) => {
       try {
         const reference = body.reference;
-        const transaction = Payment.findOne({ reference: reference });
+        const query = "SELECT * FROM payments WHERE reference = ?";
+        const transaction = await new Promise((resolve, reject) => {
+          db.query(query, [reference], (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+            resolve(result[0]);
+          });
+        });
         return resolve(transaction);
       } catch (error) {
         error.source = "Create Payment Service";
