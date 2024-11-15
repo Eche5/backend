@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const { jwt_secret, jwt_expires } = require("../config");
 const db = require("../utils/db");
 const Mailgen = require("mailgen");
+const crypto = require("crypto");
+
 const nodemailer = require("nodemailer");
 exports.createUser = async (req, res) => {
   const errors = validationResult(req);
@@ -17,7 +19,6 @@ exports.createUser = async (req, res) => {
   }
   const { email, password, first_name, last_name, phonenumber, role } =
     req.body;
-    console.log(email, password, first_name, last_name, phonenumber, role);
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -31,7 +32,6 @@ exports.createUser = async (req, res) => {
       [email, hashedPassword, first_name, last_name, phonenumber, role],
       (error, results) => {
         if (error) {
-          console.error("Error inserting user:", error);
           return res
             .status(500)
             .json({ success: false, message: "Database errors" });
@@ -42,7 +42,6 @@ exports.createUser = async (req, res) => {
 
           db.query(selectQuery, [email], async (error, user) => {
             if (error) {
-              console.error("Error inserting user:", error);
               return res
                 .status(500)
                 .json({ success: false, message: "Database error" });
@@ -59,7 +58,6 @@ exports.createUser = async (req, res) => {
       }
     );
   } catch (error) {
-    console.error("Error creating user:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -99,7 +97,6 @@ const sendVerification = async (user) => {
       logoHeight: "30px",
     },
   });
-  console.log(user)
   const link = `https://www.pickupmanng.ng/verify/${user[0].id}`;
   let response = {
     body: {
@@ -126,23 +123,21 @@ const sendVerification = async (user) => {
     html: mail,
   };
 
-const transporter = nodemailer.createTransport({
-  host: "sheep.blankipanel.com",
-  port: 587,
-  secure: false, 
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
+  const transporter = nodemailer.createTransport({
+    host: "sheep.blankipanel.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
 
   try {
     const info = await transporter.sendMail(message);
-    console.log("Email sent successfully:", info.response);
     return true;
   } catch (err) {
     console.error("Error sending email:", err);
@@ -490,7 +485,6 @@ exports.refresh = (req, res) => {
   });
 };
 
-
 exports.LogOut = (req, res) => {
   const cookie = req.cookies;
 
@@ -499,4 +493,195 @@ exports.LogOut = (req, res) => {
   res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
 
   res.json({ message: "Cookie cleared" });
+};
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        success: false,
+        code: 422,
+        status: "error",
+        data: errors.array()[0],
+      });
+    }
+
+    const { email } = req.body;
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpires = Date.now() + 3600000;
+
+    const query = `SELECT * FROM users WHERE email = ?`;
+    db.query(query, [email], async (error, result) => {
+      if (error) {
+        return res.status(401).json({
+          success: false,
+          code: 401,
+          status: "Unauthorized Request",
+          data: {
+            path: "email",
+            msg: "Email is not linked to any account",
+            value: email,
+            location: "body",
+            type: "field",
+          },
+        });
+      }
+      const sendResetToken =
+        "UPDATE users SET resetToken = ?, resetTokenExpires = FROM_UNIXTIME(?) WHERE email = ?";
+      db.query(
+        sendResetToken,
+        [resetToken, Math.floor(resetTokenExpires / 1000), email],
+        async (error, result) => {
+          if (error) {
+            console.log(error);
+            return res
+              .status(400)
+              .json({ status: false, msg: "cannot send email" });
+          }
+          await sendresetTokenemail(email, resetToken);
+          return res.status(200).json({
+            success: true,
+            code: 200,
+            status: "success",
+            data: {
+              msg: "Reset link has been successfully sent",
+            },
+          });
+        }
+      );
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.resetPassword = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      code: 422,
+      status: "error",
+      data: errors.array()[0],
+    });
+  }
+
+  const { resetToken, password } = req.body;
+  console.log(resetToken, password);
+  const findUserQuery = `
+    SELECT * FROM users 
+    WHERE resetToken = ? AND resetTokenExpires > NOW()
+  `;
+
+  db.query(findUserQuery, [resetToken], async (error, results) => {
+    if (error) {
+      console.log(error);
+      return next(error);
+    }
+    console.log(results);
+    if (results.length === 0) {
+      return res.status(400).json({
+        success: false,
+        code: 401,
+        status: "error",
+        data: {
+          path: "resetToken",
+          msg: "Invalid token session",
+          value: resetToken,
+          location: "body",
+          type: "field",
+        },
+      });
+    }
+
+    const user = results[0];
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const updatePasswordQuery = `
+        UPDATE users 
+        SET password = ?, resetToken = NULL, resetTokenExpires = NULL 
+        WHERE id = ?
+      `;
+      db.query(
+        updatePasswordQuery,
+        [hashedPassword, user.id],
+        (updateError, updateResults) => {
+          if (updateError) {
+            return next(updateError); // Pass error to error handler
+          }
+
+          return res.status(200).json({
+            success: true,
+            code: 200,
+            status: "success",
+            data: { msg: "Password reset was successful" },
+          });
+        }
+      );
+    } catch (err) {
+      next(err);
+    }
+  });
+};
+const sendresetTokenemail = async (email, resetToken) => {
+  let MailGenerator = new Mailgen({
+    theme: "default",
+    product: {
+      name: "Pickupmanng",
+      link: "https://mailgen.js/",
+      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
+      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
+      logoHeight: "30px",
+    },
+  });
+  let response = {
+    body: {
+      name: email,
+      intro: "Someone recently requested that the password be reset,",
+      action: {
+        instructions: "To reset your password please click this button:",
+        button: {
+          color: "#22BC66",
+          text: "Reset your password",
+          link: `https://www.pickupmanng.ng/resetpassword/${resetToken}`,
+        },
+      },
+      signature: "Sincerely",
+      outro:
+        "If this is a mistake just ignore this email - your password will not be changed.",
+    },
+  };
+
+  let mail = MailGenerator.generate(response);
+  let message = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Verify email",
+    html: mail,
+  };
+
+  const transporter = nodemailer.createTransport({
+    host: "sheep.blankipanel.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  try {
+    const info = await transporter.sendMail(message);
+    console.log("Email sent successfully:", info.response);
+
+    return true;
+  } catch (err) {
+    console.error("Error sending email:", err);
+  }
 };

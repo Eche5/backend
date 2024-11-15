@@ -14,5 +14,9 @@ router.route("/refresh").post(controller.refresh);
 router.route("/verify").post([user], controller.resendVerificationemail);
 router.route("/verify/:id").patch([user], controller.verify);
 router.route("/logout").post(controller.LogOut);
+router
+  .route("/forgot_password")
+  .post([email], controller.forgotPassword)
+  .patch(controller.resetPassword);
 
 module.exports = router;
