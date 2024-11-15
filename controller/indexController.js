@@ -560,9 +560,9 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "sheep.blankipanel.com",
+    host: "smtp.zoho.com",
     port: 465,
-    secure: true,
+    secure: true, 
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,

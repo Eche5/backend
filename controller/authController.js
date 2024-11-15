@@ -124,9 +124,9 @@ const sendVerification = async (user) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "sheep.blankipanel.com",
-    port: 587,
-    secure: false,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true, 
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -329,9 +329,9 @@ const sendLoginDetails = async (email, first_name, password) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "sheep.blankipanel.com",
+    host: "smtp.zoho.com",
     port: 465,
-    secure: true,
+    secure: true, 
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -631,27 +631,28 @@ const sendresetTokenemail = async (email, resetToken) => {
     theme: "default",
     product: {
       name: "Pickupmanng",
-      link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
+      link: "https://pickupmanng.ng/",
+      copyright: "Copyright © 2024 Pickupmanng. All rights reserved.",
       logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
       logoHeight: "30px",
     },
   });
+
   let response = {
     body: {
       name: email,
-      intro: "Someone recently requested that the password be reset,",
+      intro:
+        "You recently requested a password reset for your Pickupmanng account.",
       action: {
-        instructions: "To reset your password please click this button:",
+        instructions: "Click the button below to reset your password:",
         button: {
           color: "#22BC66",
-          text: "Reset your password",
+          text: "Reset Password",
           link: `https://www.pickupmanng.ng/resetpassword/${resetToken}`,
         },
       },
-      signature: "Sincerely",
-      outro:
-        "If this is a mistake just ignore this email - your password will not be changed.",
+      signature: "Best regards",
+      outro: "If you did not request this, you can safely ignore this email.",
     },
   };
 
@@ -659,29 +660,30 @@ const sendresetTokenemail = async (email, resetToken) => {
   let message = {
     from: process.env.EMAIL,
     to: email,
-    subject: "Verify email",
+    subject: "Password Reset Request - Pickupmanng",
     html: mail,
   };
 
   const transporter = nodemailer.createTransport({
-    host: "sheep.blankipanel.com",
-    port: 587,
-    secure: false,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true, // Secure must be true for port 465
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
     },
     tls: {
-      rejectUnauthorized: false,
+      rejectUnauthorized: false, // Consider removing for production
     },
   });
 
   try {
     const info = await transporter.sendMail(message);
     console.log("Email sent successfully:", info.response);
-
     return true;
   } catch (err) {
-    console.error("Error sending email:", err);
+    console.error("Error sending email:", err.message || err);
+    return false;
   }
 };
+
