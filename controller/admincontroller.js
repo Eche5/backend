@@ -296,7 +296,7 @@ exports.deletedTeamMember = (req, res) => {
 
 exports.sendEmailsToUsers = (req, res) => {
   const { message, subject } = req.body;
-  const query = 'SELECT * FROM users WHERE role = "user"';
+  const query = 'SELECT * FROM users WHERE role = "user" AND isVerified = "1"';
 
   db.query(query, async (error, result) => {
     if (error) {
