@@ -126,7 +126,7 @@ const sendVerification = async (user) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.zoho.com",
     port: 465,
-    secure: true, 
+    secure: true,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -201,16 +201,6 @@ exports.verify = async (req, res) => {
               expiresIn: jwt_expires,
             });
 
-            const refreshToken = jwt.sign({ _id: user[0].email }, jwt_secret, {
-              expiresIn: "7d",
-            });
-
-            res.cookie("jwt", refreshToken, {
-              httpOnly: true,
-              secure: true,
-              sameSite: "none",
-              maxAge: 7 * 24 * 60 * 60 * 1000,
-            });
             res.status(200).json({
               success: true,
               code: 200,
@@ -331,7 +321,7 @@ const sendLoginDetails = async (email, first_name, password) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.zoho.com",
     port: 465,
-    secure: true, 
+    secure: true,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -627,6 +617,7 @@ exports.resetPassword = (req, res, next) => {
   });
 };
 const sendresetTokenemail = async (email, resetToken) => {
+  console.log(email, resetToken);
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -667,7 +658,7 @@ const sendresetTokenemail = async (email, resetToken) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.zoho.com",
     port: 465,
-    secure: true, // Secure must be true for port 465
+    secure: true,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
@@ -679,11 +670,10 @@ const sendresetTokenemail = async (email, resetToken) => {
 
   try {
     const info = await transporter.sendMail(message);
-    console.log("Email sent successfully:", info.response);
+    console.log("Email sent successfully:", info);
     return true;
   } catch (err) {
     console.error("Error sending email:", err.message || err);
     return false;
   }
 };
-

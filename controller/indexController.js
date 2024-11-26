@@ -150,20 +150,21 @@ exports.shippingRate = (req, res) => {
   const { country, shipping_types, weight } = req.body;
 
   const query = `
-    SELECT rp.rate, rp.shipping_type
+     SELECT rp.rate, rp.shipping_type
     FROM zoning z
     JOIN rate_pricingtest rp ON z.zone = rp.zone
     WHERE z.country = ?
-      AND rp.shipping_type IN (?)
       AND rp.weight_from = ?;
   `;
+  console.log(country, weight);
 
-  db.query(query, [country, shipping_types, weight], (error, rates) => {
+  db.query(query, [country, weight], (error, rates) => {
     if (error) {
       return res
         .status(500)
         .json({ success: false, message: "Database error", error });
     } else {
+      console.log(rates);
       res.status(201).json({
         success: true,
         status: "shipping rates found",
@@ -562,7 +563,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.zoho.com",
     port: 465,
-    secure: true, 
+    secure: true,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD,
