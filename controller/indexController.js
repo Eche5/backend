@@ -7,7 +7,8 @@ const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
 
 exports.GetAllParcels = (req, res) => {
-  const query = "SELECT * FROM pickupman.parcels where payment_status ='paid'";
+  const query =
+    "SELECT * FROM pickupman.parcels WHERE payment_status = 'paid' ORDER BY created_at DESC";
   db.query(query, (error, parcels) => {
     if (error) {
       return res
@@ -28,7 +29,7 @@ exports.GetUserParcel = (req, res) => {
     SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
     FROM pickupman.parcels 
     INNER JOIN users ON parcels.sender_id = users.id 
-    WHERE parcels.sender_id = ?;
+    WHERE parcels.sender_id = ? ORDER BY created_at DESC;
   `;
 
   db.query(query, [id], (error, parcel) => {
