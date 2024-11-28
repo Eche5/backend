@@ -112,7 +112,6 @@ exports.createPayment = async (req, res, next) => {
       }
 
       let order = results[0];
-
       order.payment_status = newStatus;
       const updateQuery =
         "UPDATE parcels SET payment_status = ? WHERE tracking_number = ?";
@@ -120,7 +119,7 @@ exports.createPayment = async (req, res, next) => {
       db.query(
         updateQuery,
         [order.payment_status, response.tracking_number],
-        async (updateError, result) => {
+        (updateError, result) => {
           if (updateError) {
             return res.status(500).json({
               success: false,
@@ -128,16 +127,20 @@ exports.createPayment = async (req, res, next) => {
               error: updateError,
             });
           }
-          await sendParcelUpdate(
-            req.user.email,
-            req.user.first_name,
-            response.tracking_number,
-            results[0].state
-          );
+
           res.status(201).json({
             success: true,
             status: "Payment Created",
             data: { payment: response, order, state: results[0]?.state },
+          });
+
+          sendParcelUpdate(
+            req.user.email,
+            req.user.first_name,
+            response.tracking_number,
+            results[0].state
+          ).catch((emailError) => {
+            console.error("Failed to send parcel update email:", emailError);
           });
         }
       );
@@ -157,7 +160,6 @@ exports.shippingRate = (req, res) => {
     WHERE z.country = ?
       AND rp.weight_from = ?;
   `;
-  console.log(country, weight);
 
   db.query(query, [country, weight], (error, rates) => {
     if (error) {
@@ -165,7 +167,6 @@ exports.shippingRate = (req, res) => {
         .status(500)
         .json({ success: false, message: "Database error", error });
     } else {
-      console.log(rates);
       res.status(201).json({
         success: true,
         status: "shipping rates found",
@@ -177,7 +178,6 @@ exports.shippingRate = (req, res) => {
 
 exports.localshippingrate = (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
-  console.log(state, shipping_types, sender_state, city);
   const query = `
   SELECT rate, shipping_type, duration
   FROM rate_pricing_local
@@ -199,7 +199,6 @@ exports.localshippingrate = (req, res) => {
         .status(500)
         .json({ success: false, message: "Database error", error });
     }
-    console.log(results);
     let combinedResults = [...results];
     if (
       (city === "Abuja" && sender_state === "Lagos") ||
@@ -438,7 +437,6 @@ exports.payThroughWallet = (req, res) => {
         ],
         (error, result) => {
           if (error) {
-            console.error("Error inserting shipment:", error);
             return res.status(500).json({
               success: false,
               code: 500,

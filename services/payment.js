@@ -57,7 +57,7 @@ module.exports = class PaymentService {
         }
 
         if (result && result.length > 0) {
-          // Payment exists, so update it
+        
           const updateQuery =
             "UPDATE payments SET status = ? WHERE reference = ?";
           db.query(
@@ -73,7 +73,6 @@ module.exports = class PaymentService {
             }
           );
         } else {
-          // Payment does not exist, so insert it
           const insertQuery = `
           INSERT INTO payments (reference, amount, email, full_name, status, tracking_number) 
           VALUES (?, ?, ?, ?, ?, ?)
