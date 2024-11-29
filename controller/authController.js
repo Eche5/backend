@@ -508,7 +508,6 @@ exports.forgotPassword = async (req, res, next) => {
         [resetToken, Math.floor(resetTokenExpires / 1000), email],
         async (error, result) => {
           if (error) {
-            console.log(error);
             return res
               .status(400)
               .json({ status: false, msg: "cannot send email" });
@@ -542,7 +541,6 @@ exports.resetPassword = (req, res, next) => {
   }
 
   const { resetToken, password } = req.body;
-  console.log(resetToken, password);
   const findUserQuery = `
     SELECT * FROM users 
     WHERE resetToken = ? AND resetTokenExpires > NOW()
@@ -550,10 +548,8 @@ exports.resetPassword = (req, res, next) => {
 
   db.query(findUserQuery, [resetToken], async (error, results) => {
     if (error) {
-      console.log(error);
       return next(error);
     }
-    console.log(results);
     if (results.length === 0) {
       return res.status(400).json({
         success: false,
@@ -601,7 +597,6 @@ exports.resetPassword = (req, res, next) => {
   });
 };
 const sendresetTokenemail = async (email, resetToken) => {
-  console.log(email, resetToken);
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {

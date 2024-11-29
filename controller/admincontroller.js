@@ -127,7 +127,6 @@ exports.updateParcel = (req, res) => {
   // Insert into tracking and update parcel
   db.query(trackquery, [tracking_number, status], (error) => {
     if (error) {
-      console.log(error);
       return res
         .status(500)
         .json({ success: false, message: "Database error in tracking update" });
@@ -136,7 +135,6 @@ exports.updateParcel = (req, res) => {
     // Update the parcel table
     db.query(query, values, (error) => {
       if (error) {
-        console.log(error);
         return res
           .status(500)
           .json({ success: false, message: "Database error in parcel update" });
@@ -146,7 +144,6 @@ exports.updateParcel = (req, res) => {
       const selectQuery = "SELECT * FROM parcels WHERE tracking_number = ?";
       db.query(selectQuery, [tracking_number], async (err, parcel) => {
         if (err) {
-          console.log(err);
           return res.status(500).json({
             success: false,
             message: "Database error in fetching parcel",
@@ -159,7 +156,6 @@ exports.updateParcel = (req, res) => {
             .json({ success: false, message: "Parcel not found" });
         }
 
-        // Send the parcel update notification
         await sendParcelUpdate(
           [parcel[0].email, parcel[0].receiver_email],
           parcel[0].first_name,
@@ -230,15 +226,11 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true, //
+    host: "smtp.zeptomail.com",
+    port: 587,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
+      user: "emailapikey",
+      pass: "wSsVR61wrhX4Wqd9m2D4c+5ukQ8DBV72Fxh+3FLy6HP+SPzKp8cylUbNAgb1GfUXETZhRjsV8O4rkR0C1jJbh4sumQoGWyiF9mqRe1U4J3x17qnvhDzNWWxclBCJKYwNzg5rnWVhFMAk+g==",
     },
   });
 
@@ -254,7 +246,6 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
 
 exports.getParcelByTrackingNumber = (req, res) => {
   const { tracking_number } = req.params;
-  console.log(tracking_number);
   try {
     const query = "SELECT * FROM parcels where tracking_number = ?";
     db.query(query, [tracking_number], (error, parcel) => {
@@ -264,7 +255,6 @@ exports.getParcelByTrackingNumber = (req, res) => {
           msg: "shipment with this tracking number not found",
         });
       }
-      console.log(parcel);
       return res.status(200).json({
         status: true,
         parcel,

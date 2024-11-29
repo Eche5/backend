@@ -134,7 +134,6 @@ exports.GetUserParcel = (req, res) => {
 
 exports.getUserDetails = (req, res) => {
   const id = req.user.id;
-  console.log(id);
   const query = "SELECT * FROM users where id =?";
 
   db.query(query, [id], (error, user) => {
