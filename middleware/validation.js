@@ -12,7 +12,7 @@ exports.password = body("password")
   .isLength({ min: 8 })
   .withMessage("Password must be at least 8 characters")
   .matches(
-    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{8,}$/
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&_#])[A-Za-z\d@$!%*?&_#]{8,}$/
   )
   .withMessage(
     "Password must contain at least one lowercase, one uppercase, one digit, and one special character"

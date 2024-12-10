@@ -31,6 +31,7 @@ exports.createUser = async (req, res) => {
       query,
       [email, hashedPassword, first_name, last_name, phonenumber, role],
       (error, results) => {
+        console.log(results);
         if (error) {
           return res
             .status(500)
