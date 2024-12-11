@@ -560,11 +560,12 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zeptomail.com",
-    port: 587,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: "emailapikey",
-      pass: "wSsVR61wrhX4Wqd9m2D4c+5ukQ8DBV72Fxh+3FLy6HP+SPzKp8cylUbNAgb1GfUXETZhRjsV8O4rkR0C1jJbh4sumQoGWyiF9mqRe1U4J3x17qnvhDzNWWxclBCJKYwNzg5rnWVhFMAk+g==",
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
     },
   });
 
