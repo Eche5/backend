@@ -560,18 +560,17 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true,
+    host: "smtp.zeptomail.com",
+    port: 587,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
+      user: "emailapikey",
+      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
     },
   });
 
   try {
     const info = await transporter.sendMail(message);
-    console.log("Email sent successfully:", info.response);
+    console.log("Email sent successfully:", info.accepted[0]);
     return true;
   } catch (err) {
     console.error("Error sending email:", err);

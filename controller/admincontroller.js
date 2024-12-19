@@ -226,18 +226,17 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true,
+    host: "smtp.zeptomail.com",
+    port: 587,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
+      user: "emailapikey",
+      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
     },
   });
 
   try {
     const info = await transporter.sendMail(message);
-    console.log("Email sent successfully:", info.response);
+    console.log("Email sent successfully:", info.accepted[0]);
     return true;
   } catch (err) {
     console.error("Error sending email:", err);
@@ -326,15 +325,11 @@ const sendEmails = async (users, message, subject) => {
   });
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true, 
+    host: "smtp.zeptomail.com",
+    port: 587,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
+      user: "emailapikey",
+      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
     },
   });
 
@@ -360,7 +355,7 @@ const sendEmails = async (users, message, subject) => {
 
     try {
       const info = await transporter.sendMail(emailMessage);
-      console.log(`Email sent to ${user.email}:`, info.response);
+      console.log("Email sent successfully:", info.accepted[0]);
     } catch (err) {
       console.error(`Error sending email to ${user.email}:`, err);
       allSuccess = false;
@@ -370,10 +365,8 @@ const sendEmails = async (users, message, subject) => {
   return allSuccess;
 };
 
-
 exports.getAllRegisteredUsers = (req, res) => {
-  const query =
-    "SELECT * FROM pickupman.users WHERE role = 'user' ";
+  const query = "SELECT * FROM pickupman.users WHERE role = 'user' ";
 
   db.query(query, (error, users) => {
     if (error) {
