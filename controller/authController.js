@@ -124,11 +124,15 @@ const sendVerification = async (user) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zeptomail.com",
-    port: 587,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
@@ -316,11 +320,15 @@ const sendLoginDetails = async (email, first_name, password) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zeptomail.com",
-    port: 587,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
@@ -628,11 +636,15 @@ const sendresetTokenemail = async (email, resetToken) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zeptomail.com",
-    port: 587,
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
