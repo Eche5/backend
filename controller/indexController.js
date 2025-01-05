@@ -227,7 +227,7 @@ exports.localshippingrate = (req, res) => {
         (rate) => rate.shipping_type !== "next_day_terminal"
       );
     }
-
+    combinedResults?.push(additionalData);
     res.status(200).json({
       success: true,
       message: "Shipping rates found",
