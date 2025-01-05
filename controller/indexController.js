@@ -227,7 +227,6 @@ exports.localshippingrate = (req, res) => {
         (rate) => rate.shipping_type !== "next_day_terminal"
       );
     }
-    combinedResults.push(additionalData);
 
     res.status(200).json({
       success: true,
@@ -560,15 +559,11 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
   };
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true,
+    host: "smtp.zeptomail.com",
+    port: 587,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
+      user: "emailapikey",
+      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
     },
   });
 
