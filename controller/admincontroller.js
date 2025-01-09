@@ -42,6 +42,7 @@ exports.getAllPayments = (req, res) => {
 
 exports.updateParcel = (req, res) => {
   const {
+    id,
     tracking_number,
     parcel_weight,
     status,
@@ -53,12 +54,13 @@ exports.updateParcel = (req, res) => {
     receiver_street_address,
     receiver_city,
     receiver_landmark,
+    conversion_status,
     receiver_state,
   } = req.body;
 
   const formatDateForSQL = (dateString) => {
     const date = new Date(dateString);
-    return date.toISOString().split("T")[0]; // Returns 'YYYY-MM-DD'
+    return date.toISOString().split("T")[0];
   };
 
   if (!tracking_number) {
@@ -116,33 +118,41 @@ exports.updateParcel = (req, res) => {
     query += "status = ?, ";
     values.push(status);
   }
+  if (conversion_status) {
+    query += "conversion_status = ?, ";
+    values.push(conversion_status);
+  }
 
-  query = query.slice(0, -2); // Remove trailing comma and space
-  query += " WHERE tracking_number = ?";
-  values.push(tracking_number);
-
+  if (tracking_number) {
+    query += "tracking_number = ?, ";
+    values.push(tracking_number);
+  }
+  query = query.slice(0, -2);
+  query += " WHERE id = ?";
+  values.push(id);
+  console.log(query);
   const trackquery =
     "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
 
-  // Insert into tracking and update parcel
-  db.query(trackquery, [tracking_number, status], (error) => {
+  db.query(query, values, (error, data) => {
+    console.log(error);
     if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error in tracking update" });
+      return res.status(500).json({
+        success: false,
+        message: "Database error in parcel update",
+      });
     }
-
-    // Update the parcel table
-    db.query(query, values, (error) => {
+    db.query(trackquery, [tracking_number, status, id], (error) => {
+      console.log(error);
       if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error in parcel update" });
+        return res.status(500).json({
+          success: false,
+          message: "Database error in tracking update",
+        });
       }
 
-      // Select updated parcel
-      const selectQuery = "SELECT * FROM parcels WHERE tracking_number = ?";
-      db.query(selectQuery, [tracking_number], async (err, parcel) => {
+      const selectQuery = "SELECT * FROM parcels WHERE id = ?";
+      db.query(selectQuery, [id], async (err, parcel) => {
         if (err) {
           return res.status(500).json({
             success: false,
@@ -151,24 +161,33 @@ exports.updateParcel = (req, res) => {
         }
 
         if (parcel.length === 0) {
-          return res
-            .status(404)
-            .json({ success: false, message: "Parcel not found" });
+          return res.status(404).json({
+            success: false,
+            message: "Parcel not found",
+          });
         }
 
-        await sendParcelUpdate(
-          [parcel[0].email, parcel[0].receiver_email],
-          parcel[0].first_name,
-          parcel[0]
-        );
+        try {
+          await sendParcelUpdate(
+            [parcel[0].email, parcel[0].receiver_email],
+            parcel[0].first_name,
+            parcel[0]
+          );
 
-        return res.status(200).json({
-          success: true,
-          code: 200,
-          parcel: parcel[0],
-          status: "success",
-          msg: `Updated parcel successfully`,
-        });
+          // Send the response only once here
+          return res.status(200).json({
+            success: true,
+            code: 200,
+            parcel: parcel[0],
+            status: "success",
+            msg: `Updated parcel successfully`,
+          });
+        } catch (err) {
+          return res.status(500).json({
+            success: false,
+            message: "Error in sending parcel update email",
+          });
+        }
       });
     });
   });
