@@ -5,6 +5,8 @@ const { auth } = require("../middleware/auth");
 const router = express.Router();
 
 router.route("/parcels").get(controller.GetAllParcels);
+router.route("/standard/shipment").get(controller.GetAllStandardParcels);
+
 router.route("/parcel").get([auth], controller.GetUserParcel);
 router
   .route("/payment")

@@ -23,6 +23,24 @@ exports.GetAllParcels = (req, res) => {
   });
 };
 
+exports.GetAllStandardParcels = (req, res) => {
+  const query =
+    "SELECT * FROM pickupman.parcels WHERE payment_status = 'paid' AND selected_Deliverymode = 'standard' ORDER BY created_at DESC";
+  db.query(query, (error, parcels) => {
+    console.log(error);
+    if (error) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    } else {
+      return res.status(200).json({
+        status: true,
+        parcels,
+      });
+    }
+  });
+};
+
 exports.GetUserParcel = (req, res) => {
   const id = req.user.id;
   const query = `
@@ -327,7 +345,6 @@ exports.startWalletPayment = async (req, res, next) => {
 
 exports.payThroughWallet = (req, res) => {
   const sender_id = req.user.id;
-
   const generateTrackingNumber = () => {
     return "TRK" + Math.random().toString().slice(2, 12).padStart(10, "0");
   };
@@ -369,7 +386,6 @@ exports.payThroughWallet = (req, res) => {
   const status = "Created";
   const payment_status = "Paid";
 
-  //get user email
   const query = `
        SELECT * FROM users WHERE email = ?
       `;
@@ -435,6 +451,7 @@ exports.payThroughWallet = (req, res) => {
           receiver_landmark,
         ],
         (error, result) => {
+          console.log(error);
           if (error) {
             return res.status(500).json({
               success: false,
