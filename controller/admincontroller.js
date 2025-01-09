@@ -130,12 +130,10 @@ exports.updateParcel = (req, res) => {
   query = query.slice(0, -2);
   query += " WHERE id = ?";
   values.push(id);
-  console.log(query);
   const trackquery =
     "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
 
   db.query(query, values, (error, data) => {
-    console.log(error);
     if (error) {
       return res.status(500).json({
         success: false,
@@ -143,7 +141,6 @@ exports.updateParcel = (req, res) => {
       });
     }
     db.query(trackquery, [tracking_number, status, id], (error) => {
-      console.log(error);
       if (error) {
         return res.status(500).json({
           success: false,
