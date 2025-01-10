@@ -18,7 +18,20 @@ router.route("/payments").get([auth, super_admin], controller.getAllPayments);
 router
   .route("/deleteuser")
   .delete([auth, super_admin], controller.deletedTeamMember);
-router.route("/updateparcel").patch(controller.updateParcel);
+router
+  .route("/updateparcel")
+  .patch(
+    [
+      auth,
+      checkRoles([
+        "super_admin",
+        "processing_user",
+        "logistics_user",
+        "customers_rep",
+      ]),
+    ],
+    controller.updateParcel
+  );
 router
   .route("/getShipment/:tracking_number")
   .get(
