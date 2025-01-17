@@ -496,6 +496,7 @@ exports.payThroughWallet = (req, res) => {
 };
 
 const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
+  console.log(email, first_name, tracking_number, state);
   const dropOffLocations = [
     {
       city: "Yaba",
@@ -562,7 +563,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
           },
         ],
       },
-      signature: "Sincerely,",
+      signature: "Sincerely",
     },
   };
 
@@ -580,7 +581,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
     port: 587,
     auth: {
       user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      pass: process.env.PASSWORD,
     },
   });
 

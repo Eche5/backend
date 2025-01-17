@@ -246,7 +246,7 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
     port: 587,
     auth: {
       user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      pass: process.env.PASSWORD,
     },
   });
 
@@ -345,7 +345,7 @@ const sendEmails = async (users, message, subject) => {
     port: 587,
     auth: {
       user: "emailapikey",
-      pass: "wSsVR60k+0H0Dqd6zmarL+w4mV4DVAzxEkwrjgbw4nCqSK/Fp8dpxESfDQWhHfccFjNhRjdE9eosnhtW0mAOjtUlnw0EDiiF9mqRe1U4J3x17qnvhDzJWWxbkBWNJI0OwglunGdkF88h+g==",
+      pass: process.env.PASSWORD,
     },
   });
 
