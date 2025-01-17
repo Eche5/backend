@@ -26,8 +26,10 @@ router
       checkRoles([
         "super_admin",
         "processing_user",
+         "sub_admin",
         "logistics_user",
         "customers_rep",
+         "sub_logistics_admin",
       ]),
     ],
     controller.updateParcel
