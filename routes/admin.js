@@ -5,7 +5,7 @@ const { super_admin, processing_user } = require("../middleware/role");
 const { auth } = require("../middleware/auth");
 const checkRoles = (roles) => {
   return (req, res, next) => {
-    const userRole = req.user.role; // Assuming `req.user.role` contains the role of the authenticated user
+    const userRole = req.user.role; 
     if (!roles.includes(userRole)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -26,10 +26,10 @@ router
       checkRoles([
         "super_admin",
         "processing_user",
-         "sub_admin",
+        "sub_admin",
         "logistics_user",
         "customers_rep",
-         "sub_logistics_admin",
+        "sub_logistics_admin",
       ]),
     ],
     controller.updateParcel

@@ -1,8 +1,9 @@
 const axios = require("axios");
 const _ = require("lodash");
-const db = require("../utils/db");
 const { initializePayment, verifyPayment } =
   require("../config/paystack")(axios);
+
+const Payments = require("../models/payments");
 
 module.exports = class PaymentService {
   startPayment(data) {
@@ -48,58 +49,24 @@ module.exports = class PaymentService {
         status,
         tracking_number,
       };
-
-      const query = "SELECT * FROM payments WHERE reference = ?";
-      db.query(query, [reference], (error, result) => {
-        if (error) {
-          console.error("Error checking existing payment:", error);
-          return;
-        }
-
-        if (result && result.length > 0) {
-        
-          const updateQuery =
-            "UPDATE payments SET status = ? WHERE reference = ?";
-          db.query(
-            updateQuery,
-            [status, reference],
-            (updateError, updateResult) => {
-              if (updateError) {
-                console.error("Error updating payment status:", updateError);
-                return;
-              }
-
-              console.log("Payment updated:", updateResult);
-            }
-          );
-        } else {
-          const insertQuery = `
-          INSERT INTO payments (reference, amount, email, full_name, status, tracking_number) 
-          VALUES (?, ?, ?, ?, ?, ?)
-        `;
-          db.query(
-            insertQuery,
-            [
-              reference,
-              newPayment.amount,
-              email,
-              full_name,
-              status,
-              tracking_number,
-            ],
-            (insertError, insertResult) => {
-              if (insertError) {
-                console.error("Error inserting new payment:", insertError);
-                return;
-              }
-
-              console.log("New payment inserted:", insertResult);
-            }
-          );
-        }
+      const existingPayment = await Payments.findAll({
+        where: { reference: reference },
       });
+      let payment;
 
-      return newPayment;
+      if (existingPayment.length === 0) {
+        const createnewPayment = await Payments.create({
+          reference,
+          amount: newPayment.amount,
+          email,
+          full_name,
+          status,
+          tracking_number,
+        });
+        payment = createnewPayment;
+      }
+
+      return payment;
     } catch (error) {
       error.source = "Create Payment Service";
       throw error;
@@ -110,15 +77,12 @@ module.exports = class PaymentService {
     return new Promise(async (resolve, reject) => {
       try {
         const reference = body.reference;
-        const query = "SELECT * FROM payments WHERE reference = ?";
-        const transaction = await new Promise((resolve, reject) => {
-          db.query(query, [reference], (error, result) => {
-            if (error) {
-              return reject(error);
-            }
-            resolve(result[0]);
-          });
+        const payment = await Payments.findAll({
+          where: { reference: reference },
         });
+        if (!payment) {
+          return reject(error);
+        }
         return resolve(transaction);
       } catch (error) {
         error.source = "Create Payment Service";

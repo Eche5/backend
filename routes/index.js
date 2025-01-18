@@ -7,19 +7,19 @@ const router = express.Router();
 router.route("/parcels").get(controller.GetAllParcels);
 router.route("/standard/shipment").get(controller.GetAllStandardParcels);
 
-router.route("/parcel").get([auth], controller.GetUserParcel);
+router.route("/parcel/user").get([auth], controller.GetUserParcel);
 router
-  .route("/payment")
+  .route("/payment/debit-card")
   .get([auth], controller.createPayment)
   .post([auth], controller.startPayment);
 
 router
-  .route("/wallet")
+  .route("/wallet/funding")
   .post([auth], controller.startWalletFunding)
   .get(controller.startWalletPayment);
 
-router.route("/getrate").post(controller.shippingRate);
-router.route("/getLocalrate").post(controller.localshippingrate);
-router.route("/paywithwallet").post([auth], controller.payThroughWallet);
+router.route("/rate/international").post(controller.shippingRate);
+router.route("/rate/local").post(controller.localshippingrate);
+router.route("/payment/wallet").post([auth], controller.payThroughWallet);
 
 module.exports = router;

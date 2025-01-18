@@ -1,87 +1,80 @@
-const db = require("../utils/db");
 const PaymentService = require("../services/payment");
 const walletPaymentService = require("../services/walletPayment");
 const walletpaymentInstance = new walletPaymentService();
 const paymentInstance = new PaymentService();
 const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
-
-exports.GetAllParcels = (req, res) => {
-  const query =
-    "SELECT * FROM pickupman.parcels WHERE payment_status = 'paid' ORDER BY created_at DESC";
-  db.query(query, (error, parcels) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    } else {
-      return res.status(200).json({
-        status: true,
-        parcels,
-      });
-    }
+const Parcels = require("../models/parcels");
+const { Op } = require("sequelize");
+const RatePricingTest = require("../models/ratePricingTest");
+const Zoning = require("../models/zoning");
+const RatePricingLocal = require("../models/ratePricingLocal");
+const Users = require("../models/users");
+const Payments = require("../models/payments");
+exports.GetAllParcels = async (req, res) => {
+  const parcels = await Parcels.findAll({
+    where: {
+      payment_status: "paid",
+    },
+    order: [["created_at", "DESC"]],
   });
+  if (!parcels) {
+    return res.status(500).json({ success: false, message: "Database error" });
+  } else {
+    return res.status(200).json({
+      status: true,
+      parcels,
+    });
+  }
 };
 
-exports.GetAllStandardParcels = (req, res) => {
-  const query =
-    "SELECT * FROM pickupman.parcels WHERE payment_status = 'paid' AND selected_Deliverymode = 'standard' ORDER BY created_at DESC";
-  db.query(query, (error, parcels) => {
-    console.log(error);
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    } else {
-      return res.status(200).json({
-        status: true,
-        parcels,
-      });
-    }
+exports.GetAllStandardParcels = async (req, res) => {
+  const parcels = await Parcels.findAll({
+    where: {
+      payment_status: "paid",
+      selected_Deliverymode: {
+        [Op.in]: ["standard", "Express"],
+      },
+    },
+    order: [["created_at", "DESC"]],
   });
+  if (!parcels) {
+    return res.status(500).json({ success: false, message: "Database error" });
+  } else {
+    return res.status(200).json({
+      status: true,
+      parcels,
+    });
+  }
 };
 
-exports.GetUserParcel = (req, res) => {
+exports.GetUserParcel = async (req, res) => {
   const id = req.user.id;
-  const query = `
-    SELECT parcels.*, users.first_name, users.last_name, users.email, users.phonenumber 
-    FROM pickupman.parcels 
-    INNER JOIN users ON parcels.sender_id = users.id 
-    WHERE parcels.sender_id = ? ORDER BY created_at DESC;
-  `;
 
-  db.query(query, [id], (error, parcel) => {
-    if (error) {
-      return res.status(500).json({ success: false, message: error });
-    } else {
-      return res.status(200).json({
-        success: true,
-        parcel,
-      });
-    }
-  });
+  const parcels = await Parcels.findAll({ where: { id: id } });
+  if (!parcels) {
+    return res.status(500).json({ success: false, message: parcels });
+  } else {
+    return res.status(200).json({
+      success: true,
+      parcels,
+    });
+  }
 };
 
 exports.startPayment = async (req, res, next) => {
   try {
     const { id } = req.body;
 
-    const query = "SELECT * FROM parcels WHERE tracking_number = ?";
-
-    db.query(query, [id], async (error, results) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error", error });
-      }
-
-      if (results.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Parcel not found" });
-      }
-
-      const shipment = results[0];
+    const parcel = await Parcels.findAll({
+      where: { tracking_number: id },
+    });
+    if (!parcel) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error", error });
+    } else {
+      const shipment = parcel[0];
 
       const orderTotal = shipment.shipping_fee;
       const paymentData = {
@@ -90,119 +83,103 @@ exports.startPayment = async (req, res, next) => {
         amount: Number(orderTotal),
         tracking_number: id,
       };
-      try {
-        const response = await paymentInstance.startPayment(paymentData);
-
-        res.status(201).json({
-          success: true,
-          status: "Payment Started",
-          data: { response },
-        });
-      } catch (paymentError) {
-        res.status(500).json({
-          success: false,
-          message: "Payment error",
-          error: paymentError,
-        });
-      }
-    });
+      const response = await paymentInstance.startPayment(paymentData);
+      res.status(201).json({
+        success: true,
+        status: "Payment Started",
+        data: { response },
+      });
+    }
   } catch (err) {
     next(err);
   }
 };
 
-exports.createPayment = async (req, res, next) => {
+exports.createPayment = async (req, res) => {
   try {
+    console.log(req.query);
     const response = await paymentInstance.createPayment(req.query);
+    console.log(response);
     const newStatus = response?.status === "success" ? "Paid" : "Failed";
-    const query = "SELECT * FROM parcels WHERE tracking_number = ?";
-    db.query(query, [response.tracking_number], async (error, results) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error", error });
-      }
-
-      if (results.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Parcel not found" });
-      }
-
-      let order = results[0];
-      order.payment_status = newStatus;
-      const updateQuery =
-        "UPDATE parcels SET payment_status = ? WHERE tracking_number = ?";
-
-      db.query(
-        updateQuery,
-        [order.payment_status, response.tracking_number],
-        (updateError, result) => {
-          if (updateError) {
-            return res.status(500).json({
-              success: false,
-              message: "Failed to update payment status",
-              error: updateError,
-            });
-          }
-
-          res.status(201).json({
-            success: true,
-            status: "Payment Created",
-            data: { payment: response, order, state: results[0]?.state },
-          });
-
-          sendParcelUpdate(
-            req.user.email,
-            req.user.first_name,
-            response.tracking_number,
-            results[0].state
-          ).catch((emailError) => {
-            console.error("Failed to send parcel update email:", emailError);
-          });
-        }
-      );
+    const parcel = await Parcels.findAll({
+      where: { tracking_number: response.tracking_number },
     });
+    if (!parcel) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    } else {
+      let order = parcel[0];
+
+      order.payment_status = newStatus;
+
+      const updatedParcel = await Parcels.update(
+        {
+          payment_status: order.payment_status,
+        },
+        { where: { tracking_number: response.tracking_number } }
+      );
+
+      return res.status(201).json({
+        success: true,
+        status: "Payment Created",
+        data: { payment: response, order, state: updatedParcel[0]?.state },
+      });
+    }
   } catch (error) {
-    next(error);
+    console.error(error);
   }
 };
 
-exports.shippingRate = (req, res) => {
-  const { country, shipping_types, weight } = req.body;
+exports.shippingRate = async (req, res) => {
+  const { country, weight } = req.body;
 
-  const query = `
-     SELECT rp.rate, rp.shipping_type
-    FROM zoning z
-    JOIN rate_pricingtest rp ON z.zone = rp.zone
-    WHERE z.country = ?
-      AND rp.weight_from = ?;
-  `;
+  const zoningQuery = await Zoning.findOne({
+    where: { country },
+  });
+  if (zoningQuery) {
+    const zone = zoningQuery.zone;
 
-  db.query(query, [country, weight], (error, rates) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error", error });
-    } else {
-      res.status(201).json({
+    const ratePricingQuery = await RatePricingTest.findAll({
+      where: {
+        zone,
+        weight_from: { [Op.eq]: weight },
+      },
+      attributes: ["rate", "shipping_type"],
+    });
+
+    if (ratePricingQuery.length > 0) {
+      return res.status(200).json({
         success: true,
-        status: "shipping rates found",
-        rates,
+        status: "Shipping rates found",
+        rates: ratePricingQuery,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "No shipping rates found for the given weight.",
       });
     }
-  });
+  } else {
+    return res.status(404).json({
+      success: false,
+      message: "Zoning information not found for the provided country.",
+    });
+  }
 };
 
-exports.localshippingrate = (req, res) => {
+exports.localshippingrate = async (req, res) => {
   const { state, shipping_types, sender_state, city } = req.body;
-  const query = `
-  SELECT rate, shipping_type, duration
-  FROM rate_pricing_local
-  WHERE state = ?
-    AND (sender_state = ? OR sender_state = 'ALL')
-    AND shipping_type IN (?)
-`;
+  const ratePricingQuery = await RatePricingLocal.findAll({
+    where: {
+      state: state,
+      [Op.or]: [{ sender_state: sender_state }, { sender_state: "ALL" }],
+      shipping_type: {
+        [Op.in]: shipping_types,
+      },
+    },
+    attributes: ["rate", "shipping_type", "duration"],
+  });
 
   const additionalData = {
     shipping_type: "standard",
@@ -210,14 +187,8 @@ exports.localshippingrate = (req, res) => {
     duration:
       "4-5 business days after the drop-off day (weekends and public holidays not included)",
   };
-
-  db.query(query, [state, sender_state, shipping_types], (error, results) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error", error });
-    }
-    let combinedResults = [...results];
+  if (ratePricingQuery) {
+    let combinedResults = [...ratePricingQuery];
     if (
       (city === "Abuja" && sender_state === "Lagos") ||
       (city === "Port Harcourt" && sender_state === "Lagos") ||
@@ -249,9 +220,9 @@ exports.localshippingrate = (req, res) => {
     res.status(200).json({
       success: true,
       message: "Shipping rates found",
-      rates: combinedResults, // Return the combined results
+      rates: combinedResults,
     });
-  });
+  }
 };
 
 exports.startWalletFunding = async (req, res, next) => {
@@ -259,91 +230,72 @@ exports.startWalletFunding = async (req, res, next) => {
     const { email, first_name, last_name } = req.user;
     const { amount } = req.body;
 
-    const query = "SELECT * FROM users WHERE email = ?";
-
-    db.query(query, [email], async (error, results) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error", error });
-      }
-
-      if (results.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
+    const user = await Users.findAll({
+      where: {
+        email: email,
+      },
+    });
+    if (user) {
       const paymentData = {
         email,
         full_name: first_name + " " + last_name,
         amount,
       };
-      try {
-        const response = await walletpaymentInstance.startPayment(paymentData);
-        res.status(201).json({
-          success: true,
-          status: "Payment Started",
-          data: { response },
-        });
-      } catch (paymentError) {
-        res.status(500).json({
-          success: false,
-          message: "Payment error",
-          error: paymentError,
-        });
-      }
-    });
+      const response = await walletpaymentInstance.startPayment(paymentData);
+      return res.status(201).json({
+        success: true,
+        status: "Payment Started",
+        data: { response },
+      });
+    }
   } catch (err) {
-    next(err);
+    res.status(500).json({
+      success: false,
+      message: "Payment error",
+      error: err,
+    });
   }
 };
 
 exports.startWalletPayment = async (req, res, next) => {
   try {
     const response = await walletpaymentInstance.createPayment(req.query);
-    const query = "SELECT * FROM users WHERE email = ?";
-    db.query(query, [response.email], async (error, results) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error", error });
-      }
-      if (results.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Parcel not found" });
-      }
-
-      const updateQuery =
-        "UPDATE users SET wallet_amount = wallet_amount + ? WHERE email = ?";
-
-      db.query(
-        updateQuery,
-        [response.amount, response.email],
-        (updateError) => {
-          if (updateError) {
-            return res.status(500).json({
-              success: false,
-              message: "Failed to update payment status",
-              error: updateError,
-            });
-          }
-
-          res.status(201).json({
-            success: true,
-            status: "Payment Created",
-            data: { payment: response },
-          });
-        }
-      );
+    const existingPayment = await Payments.findOne({
+      where: { reference: response.reference },
     });
+
+    if (existingPayment && existingPayment.status === "success") {
+      return res.status(200).json({
+        success: true,
+        status: "Payment already processed",
+        data: { payment: existingPayment },
+      });
+    }
+    const user = await Users.findAll({
+      where: {
+        email: response?.email,
+      },
+    });
+
+    if (user) {
+      const newAmount =
+        Number(user[0]?.wallet_amount) + Number(response.amount);
+      await Users.update(
+        { wallet_amount: newAmount },
+        { where: { email: response.email } }
+      );
+      return res.status(201).json({
+        success: true,
+        status: "Payment Created",
+        data: { payment: response[0] },
+      });
+    }
   } catch (error) {
     next(error);
   }
 };
 
-exports.payThroughWallet = (req, res) => {
+exports.payThroughWallet = async (req, res) => {
   const sender_id = req.user.id;
   const generateTrackingNumber = () => {
     return "TRK" + Math.random().toString().slice(2, 12).padStart(10, "0");
@@ -374,7 +326,7 @@ exports.payThroughWallet = (req, res) => {
     parcel_weight,
     parcel_price,
     package_description,
-    selected_Deliverymode,
+    selected_deliverymode,
     shipping_fee,
     item_name,
     quantity,
@@ -386,113 +338,79 @@ exports.payThroughWallet = (req, res) => {
   const status = "Created";
   const payment_status = "Paid";
 
-  const query = `
-       SELECT * FROM users WHERE email = ?
-      `;
-
-  db.query(query, [req.user.email], (error, user) => {
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update payment status",
-        error: updateError,
-      });
-    }
+  const user = await Users.findAll({
+    where: {
+      email: req.user.email,
+    },
+  });
+  if (user) {
     const balance = Number(user[0].wallet_amount);
     if (balance < shipping_fee) {
       return res.status(500).json({
         success: false,
         message: "insufficient funds, please top up",
       });
-    } else {
-      const query = `INSERT INTO parcels (sender_id,first_name,last_name,phone_number, email, city,region, postal_code,social_media_handle,receiver_first_name,receiver_last_name,receiver_email,receiver_phone_number,receiver_city,receiver_region,receiver_postal_code,receiver_social_media_handle,street_address,receiver_street_address,insurance,fragile,parcel_weight,parcel_price,package_description,selected_Deliverymode,shipping_fee,payment_status,status,tracking_number, item_name,
-    quantity,
-    state,
-    receiver_state,
-    landmark,
-    receiver_landmark,created_at,updated_at)VALUES( ?, ?, ?, ?, ?, ? , ? , ?, ?, ?, ?, ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`;
-      db.query(
-        query,
-        [
-          sender_id,
-          first_name,
-          last_name,
-          phone_number,
-          email,
-          city,
-          region,
-          postal_code,
-          social_media_handle,
-          receiver_first_name,
-          receiver_last_name,
-          receiver_email,
-          receiver_phone_number,
-          receiver_city,
-          receiver_region,
-          receiver_postal_code,
-          receiver_social_media_handle,
-          street_address,
-          receiver_street_address,
-          insurance,
-          fragile,
-          parcel_weight,
-          parcel_price,
-          package_description,
-          selected_Deliverymode,
-          shipping_fee,
-          payment_status,
-          status,
-          tracking_number,
-          item_name,
-          quantity,
-          state,
-          receiver_state,
-          landmark,
-          receiver_landmark,
-        ],
-        (error, result) => {
-          console.log(error);
-          if (error) {
-            return res.status(500).json({
-              success: false,
-              code: 500,
-              status: "error",
-              msg: "Failed to create shipment",
-            });
-          } else {
-            const updateQuery =
-              "UPDATE users SET wallet_amount = wallet_amount - ? WHERE email = ?";
-
-            db.query(
-              updateQuery,
-              [shipping_fee, req.user.email],
-              async (updateError) => {
-                if (updateError) {
-                  return res.status(500).json({
-                    success: false,
-                    message: "Failed to update payment status",
-                    error: updateError,
-                  });
-                }
-                await sendParcelUpdate(
-                  req.user.email,
-                  req.user.first_name,
-                  tracking_number
-                );
-                return res.status(201).json({
-                  success: true,
-                  code: 200,
-                  tracking_number,
-                  status: "success",
-                  msg: `Shipment with tracking number ${tracking_number}  created successfully`,
-                });
-              }
-            );
-          }
-        }
-      );
     }
-  });
+    const newShipment = await Parcels.create({
+      sender_id,
+      first_name,
+      last_name,
+      phone_number,
+      email,
+      city,
+      region,
+      postal_code,
+      social_media_handle,
+      receiver_first_name,
+      receiver_last_name,
+      receiver_email,
+      receiver_phone_number,
+      receiver_city,
+      receiver_region,
+      receiver_postal_code,
+      receiver_social_media_handle,
+      street_address,
+      receiver_street_address,
+      insurance,
+      fragile,
+      parcel_weight,
+      parcel_price,
+      package_description,
+      selected_deliverymode,
+      shipping_fee,
+      payment_status,
+      status,
+      tracking_number,
+      item_name,
+      quantity,
+      state,
+      receiver_state,
+      landmark,
+      receiver_landmark,
+    });
+    if (newShipment) {
+      const newAmount = Number(user[0]?.wallet_amount) - Number(shipping_fee);
+      await Users.update(
+        {
+          wallet_amount: newAmount,
+        },
+        { where: { email: req.user.email } }
+      );
+      await sendParcelUpdate(
+        req.user.email,
+        req.user.first_name,
+        tracking_number,
+        newShipment[0]?.state
+      );
+      return res.status(201).json({
+        success: true,
+        code: 200,
+        tracking_number,
+        status: "success",
+        msg: `Shipment with tracking number ${tracking_number}  created successfully`,
+      });
+    }
+  }
 };
 
 const sendParcelUpdate = async (email, first_name, tracking_number, state) => {

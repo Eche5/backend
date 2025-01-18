@@ -2,11 +2,13 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const { jwt_secret, jwt_expires } = require("../config");
-const db = require("../utils/db");
 const Mailgen = require("mailgen");
 const crypto = require("crypto");
 
 const nodemailer = require("nodemailer");
+const Users = require("../models/users");
+const { Op } = require("sequelize");
+
 exports.createUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -21,43 +23,29 @@ exports.createUser = async (req, res) => {
     req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = `
-      INSERT INTO users (email, password, first_name, last_name, phonenumber, role)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    db.query(
-      query,
-      [email, hashedPassword, first_name, last_name, phonenumber, role],
-      (error, results) => {
-        if (error) {
-          return res
-            .status(500)
-            .json({ success: false, message: "Database errors" });
-        } else {
-          const selectQuery = `
-       SELECT * FROM users WHERE email = ?
-      `;
-
-          db.query(selectQuery, [email], async (error, user) => {
-            if (error) {
-              return res
-                .status(500)
-                .json({ success: false, message: "Database error" });
-            }
-            await sendVerification(user);
-
-            res.status(201).json({
-              success: true,
-              user,
-              message: "User created successfully",
-            });
-          });
-        }
-      }
-    );
+    const user = await Users.create({
+      email,
+      password: hashedPassword,
+      first_name,
+      last_name,
+      phonenumber,
+      role,
+    });
+    console.log(user);
+    if (user) {
+      await sendVerification(user);
+      return res.status(201).json({
+        success: true,
+        user,
+        message: "User created successfully",
+      });
+    } else {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -70,7 +58,6 @@ const generatePassword = () => {
   const allChars = lowerCase + upperCase + digits + specialChars;
 
   let password = "";
-  // Ensure at least one of each type
   password += lowerCase[Math.floor(Math.random() * lowerCase.length)];
   password += upperCase[Math.floor(Math.random() * upperCase.length)];
   password += digits[Math.floor(Math.random() * digits.length)];
@@ -97,10 +84,10 @@ const sendVerification = async (user) => {
       logoHeight: "30px",
     },
   });
-  const link = `https://www.pickupmanng.ng/verify/${user[0].id}`;
+  const link = `https://www.pickupmanng.ng/verify/${user.id}`;
   let response = {
     body: {
-      name: user[0].first_name,
+      name: user.first_name,
       intro:
         "We are thrilled to have you join us. Verify your email address to get started and access the resources available on our platform.",
       action: {
@@ -118,7 +105,7 @@ const sendVerification = async (user) => {
   let mail = MailGenerator.generate(response);
   let message = {
     from: process.env.EMAIL,
-    to: user[0].email,
+    to: user.email,
     subject: "Verify email",
     html: mail,
   };
@@ -144,22 +131,17 @@ const sendVerification = async (user) => {
 exports.resendVerificationemail = async (req, res) => {
   try {
     const { email } = req.body;
-
-    const selectQuery = `
-       SELECT * FROM users WHERE email = ?
-      `;
-    db.query(selectQuery, [email], async (error, user) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      } else {
-        await sendVerification(user);
-        return res.status(200).json({
-          message: "success",
-        });
-      }
-    });
+    const user = await Users.findAll({ where: { email: email } });
+    if (!user) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    } else {
+      await sendVerification(user[0]);
+      return res.status(200).json({
+        message: "success",
+      });
+    }
   } catch (error) {
     return res.status(404).json({ message: "failed" });
   }
@@ -167,51 +149,35 @@ exports.resendVerificationemail = async (req, res) => {
 exports.verify = async (req, res) => {
   try {
     const id = req.params.id;
-    const selectQuery = `
-       SELECT * FROM users WHERE id = ?
-      `;
-    db.query(selectQuery, [id], async (error, user) => {
-      if (error) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      } else {
-        const isVerified = 1;
-        const updateQuery = "UPDATE users SET isVerified = ? WHERE id = ?";
+    const user = await Users.findAll({ where: { id: id } });
+    if (!user) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    } else {
+      const updatedUser = await Users.update(
+        { is_verified: true },
+        {
+          where: {
+            id: id,
+          },
+        }
+      );
+      const token = jwt.sign({ _id: updatedUser[0].id }, jwt_secret, {
+        expiresIn: jwt_expires,
+      });
 
-        db.query(updateQuery, [isVerified, id], (error, user) => {
-          if (error) {
-            return res
-              .status(500)
-              .json({ success: false, message: "Database error" });
-          }
-          const query = `
-       SELECT * FROM users WHERE id = ?
-      `;
-          db.query(query, [id], (error, user) => {
-            if (error) {
-              return res
-                .status(500)
-                .json({ success: false, message: "Database error" });
-            }
-            const token = jwt.sign({ _id: user[0].email }, jwt_secret, {
-              expiresIn: jwt_expires,
-            });
-
-            res.status(200).json({
-              success: true,
-              code: 200,
-              status: "success",
-              data: {
-                user: user[0],
-                accessToken: token,
-                msg: "User logged in successfully",
-              },
-            });
-          });
-        });
-      }
-    });
+      res.status(200).json({
+        success: true,
+        code: 200,
+        status: "success",
+        data: {
+          user: updatedUser[0],
+          accessToken: token,
+          msg: "User logged in successfully",
+        },
+      });
+    }
   } catch (error) {
     return res.status(404).json({
       status: "failed",
@@ -235,28 +201,25 @@ exports.createTeamMembers = async (req, res) => {
   try {
     const password = generatePassword();
     const hashedPassword = await bcrypt.hash(password, 10);
-    const query = `
-      INSERT INTO users (email, password, first_name, last_name, phonenumber, role)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    db.query(
-      query,
-      [email, hashedPassword, first_name, last_name, phonenumber, role],
-      async (error, results) => {
-        if (error) {
-          console.error("Error inserting user:", error);
-          return res
-            .status(500)
-            .json({ success: false, message: "Database error" });
-        }
-        await sendLoginDetails(email, first_name, password);
-        res.status(201).json({
-          success: true,
-          message: "Team member created successfully",
-        });
-      }
-    );
+    const user = await Users.create({
+      email,
+      password: hashedPassword,
+      first_name,
+      last_name,
+      phonenumber,
+      role,
+    });
+    if (!user) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    } else {
+      await sendLoginDetails(email, first_name, password);
+      res.status(201).json({
+        success: true,
+        message: "Team member created successfully",
+      });
+    }
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -275,29 +238,28 @@ const sendLoginDetails = async (email, first_name, password) => {
     },
   });
 
-  // Define the content of the email with login details
   let response = {
     body: {
-      name: first_name, // Assuming `user` is an object with a `first_name` field
+      name: first_name,
       intro: "Welcome to Pickupmanng! Below are your login credentials.",
       table: {
         data: [
           {
             item: "Email",
-            description: email, // Email from the user object
+            description: email,
           },
           {
             item: "Password",
-            description: password, // Plain-text password
+            description: password,
           },
         ],
       },
       action: {
         instructions: "You can log in to your account using the button below:",
         button: {
-          color: "#22BC66", // Button color
+          color: "#22BC66",
           text: "Login to Pickupmanng",
-          link: "https://www.pickupmanng.ng", // Your login page link
+          link: "https://www.pickupmanng.ng",
         },
       },
       outro:
@@ -346,110 +308,58 @@ exports.login = async (req, res, next) => {
       });
     }
     const { email, password } = req.body;
-    const query = `SELECT * FROM users WHERE email = ?`;
-    db.query(query, [email], async (error, user) => {
-      if (error) {
-      } else {
-        if (user.length === 0) {
-          return res.status(404).json({
-            success: false,
-            code: 404,
-            status: "error",
-            data: {
-              path: "email",
-              msg: "Email is not registered to a user",
-              value: email,
-              location: "body",
-              type: "field",
-            },
-          });
-        }
-        const match = await bcrypt.compare(password, user[0]?.password);
-        if (!match) {
-          return res.status(401).json({
-            success: false,
-            code: 401,
-            status: "error",
-            data: {
-              path: "password",
-              msg: "Email or password is incorrect.",
-              value: password,
-              location: "body",
-              type: "field",
-            },
-          });
-        } else if (match && user[0].isVerified === 0) {
-          return res.status(400).json({
-            success: false,
-            code: 401,
-            status: "error",
-            data: {
-              path: "isverified",
-              msg: "please verify your email",
-              value: user.isVerified,
-              location: "body",
-              type: "field",
-            },
-          });
-        } else {
-          const token = jwt.sign({ _id: user[0].email }, jwt_secret, {
-            expiresIn: jwt_expires,
-          });
-
-          return res.status(200).json({
-            success: true,
-            code: 200,
-            status: "success",
-            data: {
-              user: user[0],
-              accessToken: token,
-              msg: "User logged in successfully",
-            },
-          });
-        }
-      }
+    const user = await Users.findAll({
+      where: {
+        email: email,
+      },
     });
-  } catch (error) {
-    next(error);
-  }
-};
+    const match = await bcrypt.compare(password, user[0]?.password);
 
-exports.refresh = (req, res) => {
-  const jwt_token_from_body = req.body.jwt_token_from_body;
-  const jwt_token_from_cookie = req.cookies?.jwt;
-
-  const token = jwt_token_from_body || jwt_token_from_cookie;
-
-  if (!token) {
-    return res.status(400).json({ message: "No token provided" });
-  }
-
-  jwt.verify(token, jwt_secret, async (err, decoded) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
-
-    const query = `SELECT * FROM users WHERE email = ?`;
-    db.query(query, [decoded._id], async (error, user) => {
-      if (error) return res.status(500).json({ message: "Database error" });
-      if (!user || user.length === 0) {
-        return res.status(401).json({ message: "User not authorized" });
-      }
-
-      const accessToken = jwt.sign({ _id: user[0].email }, jwt_secret, {
-        expiresIn: "7d",
+    if (!match) {
+      return res.status(401).json({
+        success: false,
+        code: 401,
+        status: "error",
+        data: {
+          path: "password",
+          msg: "Email or password is incorrect.",
+          value: password,
+          location: "body",
+          type: "field",
+        },
+      });
+    } else if (match && !user[0].is_verified) {
+      return res.status(400).json({
+        success: false,
+        code: 401,
+        status: "error",
+        data: {
+          path: "isverified",
+          msg: "please verify your email",
+          value: user.is_verified,
+          location: "body",
+          type: "field",
+        },
+      });
+    } else {
+      const token = jwt.sign({ _id: user[0].id }, jwt_secret, {
+        expiresIn: jwt_expires,
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         code: 200,
         status: "success",
         data: {
           user: user[0],
-          accessToken,
-          msg: "User session extended",
+          accessToken: token,
+          msg: "User logged in successfully",
         },
       });
-    });
-  });
+    }
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.LogOut = (req, res) => {
@@ -475,54 +385,43 @@ exports.forgotPassword = async (req, res, next) => {
     }
 
     const { email } = req.body;
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenExpires = Date.now() + 3600000;
 
-    const query = `SELECT * FROM users WHERE email = ?`;
-    db.query(query, [email], async (error, result) => {
-      if (error) {
-        return res.status(401).json({
-          success: false,
-          code: 401,
-          status: "Unauthorized Request",
-          data: {
-            path: "email",
-            msg: "Email is not linked to any account",
-            value: email,
-            location: "body",
-            type: "field",
+    const user = await Users.findAll({
+      where: {
+        email: email,
+      },
+    });
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const resetTokenExpires = Date.now() + 3600000;
+      const tokenEmail = await Users.update(
+        {
+          resetToken: resetToken,
+          resetTokenExpires: Math.floor(resetTokenExpires / 1000),
+        },
+        {
+          where: {
+            email: user[0]?.email,
           },
-        });
-      }
-      const sendResetToken =
-        "UPDATE users SET resetToken = ?, resetTokenExpires = FROM_UNIXTIME(?) WHERE email = ?";
-      db.query(
-        sendResetToken,
-        [resetToken, Math.floor(resetTokenExpires / 1000), email],
-        async (error, result) => {
-          if (error) {
-            return res
-              .status(400)
-              .json({ status: false, msg: "cannot send email" });
-          }
-          await sendresetTokenemail(email, resetToken);
-          return res.status(200).json({
-            success: true,
-            code: 200,
-            status: "success",
-            data: {
-              msg: "Reset link has been successfully sent",
-            },
-          });
         }
       );
-    });
+      console.log(tokenEmail);
+      await sendresetTokenemail(email, resetToken);
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        status: "success",
+        data: {
+          msg: "Reset link has been successfully sent",
+        },
+      });
+    }
   } catch (error) {
     next(error);
   }
 };
 
-exports.resetPassword = (req, res, next) => {
+exports.resetPassword = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({
@@ -534,60 +433,44 @@ exports.resetPassword = (req, res, next) => {
   }
 
   const { resetToken, password } = req.body;
-  const findUserQuery = `
-    SELECT * FROM users 
-    WHERE resetToken = ? AND resetTokenExpires > NOW()
-  `;
-
-  db.query(findUserQuery, [resetToken], async (error, results) => {
-    if (error) {
-      return next(error);
-    }
-    if (results.length === 0) {
-      return res.status(400).json({
-        success: false,
-        code: 401,
-        status: "error",
-        data: {
-          path: "resetToken",
-          msg: "Invalid token session",
-          value: resetToken,
-          location: "body",
-          type: "field",
-        },
-      });
-    }
-
-    const user = results[0];
-
-    try {
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      const updatePasswordQuery = `
-        UPDATE users 
-        SET password = ?, resetToken = NULL, resetTokenExpires = NULL 
-        WHERE id = ?
-      `;
-      db.query(
-        updatePasswordQuery,
-        [hashedPassword, user.id],
-        (updateError, updateResults) => {
-          if (updateError) {
-            return next(updateError); // Pass error to error handler
-          }
-
-          return res.status(200).json({
-            success: true,
-            code: 200,
-            status: "success",
-            data: { msg: "Password reset was successful" },
-          });
-        }
-      );
-    } catch (err) {
-      next(err);
-    }
+  const user = await Users.findAll({
+    where: {
+      resetToken: resetToken,
+      resetTokenExpires: {
+        [Op.gt]: Math.floor(Date.now() / 1000),
+      },
+    },
   });
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      code: 401,
+      status: "error",
+      data: {
+        path: "resetToken",
+        msg: "Invalid token session",
+        value: resetToken,
+        location: "body",
+        type: "field",
+      },
+    });
+  } else {
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await Users.update(
+      {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null,
+      },
+      { where: { id: user[0]?.id } }
+    );
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      status: "success",
+      data: { msg: "Password reset was successful" },
+    });
+  }
 };
 const sendresetTokenemail = async (email, resetToken) => {
   let MailGenerator = new Mailgen({

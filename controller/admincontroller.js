@@ -1,46 +1,51 @@
-const db = require("../utils/db");
 const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
-exports.getAllTeamMembers = (req, res) => {
-  const query =
-    "SELECT * FROM pickupman.users WHERE role NOT IN ('user', 'super_admin')";
+const Users = require("../models/users");
+const Payments = require("../models/payments");
+const { Op } = require("sequelize");
+const Parcels = require("../models/parcels");
+const ParcelTracking = require("../models/parcelTracking");
 
-  db.query(query, (error, users) => {
-    if (error) {
-      return res.status(500).json({ success: false, message: error });
-    } else {
-      return res.status(200).json({
-        success: true,
-        code: 200,
-        users,
-        status: "success",
-        msg: `fetched team members`,
-      });
-    }
+exports.getAllTeamMembers = async (req, res) => {
+  const users = await Users.findAll({
+    where: {
+      role: {
+        [Op.notIn]: ["user", "super_admin"],
+      },
+    },
   });
+  if (!users) {
+    return res
+      .status(500)
+      .json({ success: false, message: "something went wrong" });
+  } else {
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      users,
+      status: "success",
+      msg: `fetched team members`,
+    });
+  }
 };
 
-exports.getAllPayments = (req, res) => {
+exports.getAllPayments = async (req, res) => {
   const query = "SELECT * FROM pickupman.payments";
-
-  db.query(query, (error, payments) => {
-    if (error) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    } else {
-      return res.status(200).json({
-        success: true,
-        code: 200,
-        payments,
-        status: "success",
-        msg: `fetched team members`,
-      });
-    }
-  });
+  const payments = await Payments.findAll();
+  if (!payments) {
+    return res.status(500).json({ success: false, message: "Database error" });
+  } else {
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      payments,
+      status: "success",
+      msg: `fetched team members`,
+    });
+  }
 };
 
-exports.updateParcel = (req, res) => {
+exports.updateParcel = async (req, res) => {
   const {
     id,
     tracking_number,
@@ -58,136 +63,49 @@ exports.updateParcel = (req, res) => {
     receiver_state,
   } = req.body;
 
-  const formatDateForSQL = (dateString) => {
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0];
-  };
-
-  if (!tracking_number) {
-    return res.status(400).json({
-      success: false,
-      message: "Tracking number is required",
+  const updateParcel = await Parcels.update(
+    {
+      tracking_number,
+      parcel_weight,
+      status,
+      estimated_delivery_date,
+      receiver_first_name,
+      receiver_last_name,
+      receiver_phone_number,
+      receiver_email,
+      receiver_street_address,
+      receiver_city,
+      receiver_landmark,
+      conversion_status,
+      receiver_state,
+    },
+    { where: { id: id } }
+  );
+  if (updateParcel) {
+    const createHistory = await ParcelTracking.create({
+      tracking_number,
+      status,
     });
-  }
 
-  let query = "UPDATE parcels SET ";
-  let values = [];
+    if (createHistory) {
+      const parcel = await Parcels.findAll({ where: { id } });
 
-  if (parcel_weight) {
-    query += "parcel_weight = ?, ";
-    values.push(parcel_weight);
-  }
-  if (estimated_delivery_date) {
-    query += "estimated_delivery_date = ?, ";
-    const estimatedDeliveryDate = formatDateForSQL(estimated_delivery_date);
-    values.push(estimatedDeliveryDate);
-  }
-  if (receiver_first_name) {
-    query += "receiver_first_name = ?, ";
-    values.push(receiver_first_name);
-  }
-  if (receiver_last_name) {
-    query += "receiver_last_name = ?, ";
-    values.push(receiver_last_name);
-  }
-  if (receiver_city) {
-    query += "receiver_city = ?, ";
-    values.push(receiver_city);
-  }
-  if (receiver_email) {
-    query += "receiver_email = ?, ";
-    values.push(receiver_email);
-  }
-  if (receiver_street_address) {
-    query += "receiver_street_address = ?, ";
-    values.push(receiver_street_address);
-  }
-  if (receiver_state) {
-    query += "receiver_state = ?, ";
-    values.push(receiver_state);
-  }
-  if (receiver_landmark) {
-    query += "receiver_landmark = ?, ";
-    values.push(receiver_landmark);
-  }
-  if (receiver_phone_number) {
-    query += "receiver_phone_number = ?, ";
-    values.push(receiver_phone_number);
-  }
-  if (status) {
-    query += "status = ?, ";
-    values.push(status);
-  }
-  if (conversion_status) {
-    query += "conversion_status = ?, ";
-    values.push(conversion_status);
-  }
+      await sendParcelUpdate(
+        [parcel[0].email, parcel[0].receiver_email],
+        parcel[0].first_name,
+        parcel[0]
+      );
 
-  if (tracking_number) {
-    query += "tracking_number = ?, ";
-    values.push(tracking_number);
-  }
-  query = query.slice(0, -2);
-  query += " WHERE id = ?";
-  values.push(id);
-  const trackquery =
-    "INSERT INTO ParcelTracking (tracking_number, status, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)";
-
-  db.query(query, values, (error, data) => {
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Database error in parcel update",
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        parcel: parcel[0],
+        user: parcel,
+        status: "success",
+        msg: `Updated parcel successfully`,
       });
     }
-    db.query(trackquery, [tracking_number, status, id], (error) => {
-      if (error) {
-        return res.status(500).json({
-          success: false,
-          message: "Database error in tracking update",
-        });
-      }
-
-      const selectQuery = "SELECT * FROM parcels WHERE id = ?";
-      db.query(selectQuery, [id], async (err, parcel) => {
-        if (err) {
-          return res.status(500).json({
-            success: false,
-            message: "Database error in fetching parcel",
-          });
-        }
-
-        if (parcel.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: "Parcel not found",
-          });
-        }
-
-        try {
-          await sendParcelUpdate(
-            [parcel[0].email, parcel[0].receiver_email],
-            parcel[0].first_name,
-            parcel[0]
-          );
-
-          // Send the response only once here
-          return res.status(200).json({
-            success: true,
-            code: 200,
-            parcel: parcel[0],
-            status: "success",
-            msg: `Updated parcel successfully`,
-          });
-        } catch (err) {
-          return res.status(500).json({
-            success: false,
-            message: "Error in sending parcel update email",
-          });
-        }
-      });
-    });
-  });
+  }
 };
 
 const sendParcelUpdate = async (emails, first_name, parcel) => {
@@ -260,60 +178,61 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
   }
 };
 
-exports.getParcelByTrackingNumber = (req, res) => {
+exports.getParcelByTrackingNumber = async (req, res) => {
   const { tracking_number } = req.params;
   try {
-    const query = "SELECT * FROM parcels where tracking_number = ?";
-    db.query(query, [tracking_number], (error, parcel) => {
-      if (error) {
-        return res.status(401).json({
-          status: false,
-          msg: "shipment with this tracking number not found",
-        });
-      }
+    const parcel = await Parcels.findAll({
+      where: { tracking_number: tracking_number },
+    });
+    if (!parcel) {
+      return res.status(401).json({
+        status: false,
+        msg: "shipment with this tracking number not found",
+      });
+    } else {
       return res.status(200).json({
         status: true,
         parcel,
       });
-    });
+    }
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.deletedTeamMember = (req, res) => {
+exports.deletedTeamMember = async (req, res) => {
   const { id } = req.body;
-
-  const query = "DELETE FROM `pickupman`.`users` where id = ?";
-  db.query(query, id, (error) => {
-    if (error) {
-      res.status(404).json({
-        status: false,
-        msg: "error deleting team member",
-      });
-    } else {
-      res.status(204).json({
-        status: true,
-        msg: "Team member deleted successfully",
-      });
-    }
+  const user = await Users.destroy({
+    where: {
+      id: id,
+    },
   });
+  if (!user) {
+    return res.status(404).json({
+      status: false,
+      msg: "error deleting team member",
+    });
+  } else {
+    res.status(204).json({
+      status: true,
+      msg: "Team member deleted successfully",
+    });
+  }
 };
 
-exports.sendEmailsToUsers = (req, res) => {
+exports.sendEmailsToUsers = async (req, res) => {
   const { message, subject } = req.body;
-  const query = 'SELECT * FROM users WHERE role = "user" AND isVerified = "1"';
+  const verifiedUsers = await Users.findAll({
+    where: { role: "user", is_verified: true },
+  });
 
-  db.query(query, async (error, result) => {
-    if (error) {
-      return res.status(404).json({
-        status: false,
-        msg: "Database error",
-      });
-    }
-
-    const sendResults = await sendEmails(result, message, subject);
-
+  if (!verifiedUsers) {
+    return res.status(404).json({
+      status: false,
+      msg: "Database error",
+    });
+  } else {
+    const sendResults = await sendEmails(verifiedUsers, message, subject);
     if (sendResults) {
       res.status(200).json({
         status: true,
@@ -325,7 +244,7 @@ exports.sendEmailsToUsers = (req, res) => {
         msg: "Failed to send some emails",
       });
     }
-  });
+  }
 };
 
 const sendEmails = async (users, message, subject) => {
@@ -381,20 +300,23 @@ const sendEmails = async (users, message, subject) => {
   return allSuccess;
 };
 
-exports.getAllRegisteredUsers = (req, res) => {
-  const query = "SELECT * FROM pickupman.users WHERE role = 'user' ";
-
-  db.query(query, (error, users) => {
-    if (error) {
-      return res.status(500).json({ success: false, message: error });
-    } else {
-      return res.status(200).json({
-        success: true,
-        code: 200,
-        users,
-        status: "success",
-        msg: `fetched team members`,
-      });
-    }
+exports.getAllRegisteredUsers = async (req, res) => {
+  const users = await Users.findAll({
+    where: { role: "user", is_verified: true },
   });
+  console.log(users);
+  if (!users) {
+    return res.status(404).json({
+      status: false,
+      msg: "Database error",
+    });
+  } else {
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      users,
+      status: "success",
+      msg: `fetched team members`,
+    });
+  }
 };

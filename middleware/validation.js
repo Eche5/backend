@@ -1,11 +1,11 @@
 const { check, body } = require("express-validator");
-const db = require("../utils/db");
+const Users = require("../models/users");
 
 exports.email = check("email")
   .notEmpty()
   .withMessage("The email field cannot be empty")
   .isEmail()
-  .withMessage("Enter a valid email address")
+  .withMessage("Enter a valid email address");
 exports.password = body("password")
   .notEmpty()
   .withMessage("The password field requires a value")
@@ -26,20 +26,17 @@ exports.user = check("email")
   .withMessage("Enter a valid email address")
   .custom(async (value) => {
     return new Promise((resolve, reject) => {
-      db.query(
-        "SELECT * FROM users WHERE email = ?",
-        [value],
-        (error, results) => {
-          if (error) {
-            return reject("Database query failed"); // Reject with a message, not an Error object
-          }
-          if (results.length > 0) {
-            return reject("User exists with this email"); // Reject with a validation message
-          } else {
-            resolve(true); // No user found, continue
-          }
-        }
-      );
+      const user = Users.findAll({
+        where: {
+          email: value,
+        },
+      });
+
+      if (user) {
+        return reject("User exists with this email"); // Reject with a validation message
+      } else {
+        resolve(true); // No user found, continue
+      }
     });
   });
 

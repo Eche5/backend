@@ -1,6 +1,6 @@
 const axios = require("axios");
 const _ = require("lodash");
-const db = require("../utils/db");
+const Payments = require("../models/payments");
 const { initializePayment, verifyPayment } =
   require("../config/walletpaystack")(axios);
 
@@ -36,62 +36,32 @@ module.exports = class PaymentService {
 
       const newPayment = {
         reference,
-        amount: Number(amount) / 100, 
+        amount: Number(amount) / 100,
         email,
         fullname: full_name,
         status,
       };
-
-      const query = "SELECT * FROM payments WHERE reference = ?";
-      const existingPayment = await new Promise((resolve, reject) => {
-        db.query(query, [reference], (error, result) => {
-          if (error) {
-            return reject(error);
-          }
-          resolve(result[0]); 
-        });
+      const existingPayment = await Payments.findAll({
+        where: { reference: reference },
       });
 
       let payment;
 
-      if (existingPayment) {
-        const updateQuery =
-          "UPDATE payments SET status = ? WHERE reference = ?";
-        await new Promise((resolve, reject) => {
-          db.query(updateQuery, [status, reference], (error, result) => {
-            if (error) {
-              return reject(error);
-            }
-            resolve(result);
-          });
+      if (existingPayment.length === 0) {
+        const createnewPayment = await Payments.create({
+          reference,
+          amount: newPayment.amount,
+          email,
+          full_name,
+          status,
         });
 
-        payment = { ...existingPayment, status };
-      } else {
-        const insertQuery = `
-        INSERT INTO payments (reference, amount, email, full_name, status) 
-        VALUES (?, ?, ?, ?, ?)`;
-        let wallet_amount = Number(amount) / 100;
-        await new Promise((resolve, reject) => {
-          db.query(
-            insertQuery,
-            [reference, wallet_amount, email, full_name, status],
-            (error, result) => {
-              if (error) {
-                return reject(error);
-              }
-              resolve(result);
-            }
-          );
-        });
-
-        payment = newPayment; 
+        payment = createnewPayment;
       }
-
-      return payment; 
+      return payment;
     } catch (error) {
       error.source = "Create Payment Service";
-      throw error; 
+      throw error;
     }
   }
 

@@ -8,8 +8,8 @@ const adminRoutes = require("./routes/admin");
 const rateLimit = require("express-rate-limit");
 
 const dotenv = require("dotenv").config();
-
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(cookieParser());
