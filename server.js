@@ -11,9 +11,14 @@ const RatePricingTest = require("./models/ratePricingTest");
 const Payments = require("./models/payments");
 dotenv.config({ path: ".env" });
 
-sequelize.sync().then((result) => {
-  // console.log(result);
-});
+sequelize
+  .sync()
+  .then(() => {
+    console.log("Database synced");
+  })
+  .catch((error) => {
+    console.error("Database sync failed:", error.message);
+  });
 
 const PORT = process.env.PORT;
 
