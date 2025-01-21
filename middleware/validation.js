@@ -24,15 +24,18 @@ exports.user = check("email")
   .withMessage("The email field cannot be empty")
   .isEmail()
   .withMessage("Enter a valid email address")
-  .custom((value, { req }) => {
-    return Users.findAll({
-      where: {
-        email: value,
-      },
-    }).then((user) => {
-      console.log(user);
-      if (user.length === 0) {
-        return Promise.reject("User exists with this email");
+  .custom(async (value) => {
+    return new Promise((resolve, reject) => {
+      const user = Users.findAll({
+        where: {
+          email: value,
+        },
+      });
+
+      if (user) {
+        return reject("User exists with this email");
+      } else {
+        resolve(true);
       }
     });
   });

@@ -11,7 +11,7 @@ router
   .post([auth, super_admin], controller.createTeamMembers);
 router.route("/login").post([email, password], controller.login);
 router.route("/verify").post([user], controller.resendVerificationemail);
-router.route("/verify/:id").patch([user], controller.verify);
+router.route("/verify/:id").patch(controller.verify);
 router.route("/logout").post(controller.LogOut);
 router
   .route("/forgot_password")

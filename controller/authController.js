@@ -150,12 +150,21 @@ exports.resendVerificationemail = async (req, res) => {
 exports.verify = async (req, res) => {
   try {
     const id = req.params.id;
+
     const user = await Users.findAll({ where: { id: id } });
     if (!user) {
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
+    } else if (user[0]?.is_verified) {
+      return res.status(401).json({
+        success: false,
+        code: 401,
+        status: "error",
+        data: { msg: "User already verified" },
+      });
     } else {
+      console.log(id);
       const updatedUser = await Users.update(
         { is_verified: true },
         {
@@ -164,7 +173,8 @@ exports.verify = async (req, res) => {
           },
         }
       );
-      const token = jwt.sign({ _id: updatedUser[0].id }, jwt_secret, {
+      console.log(updatedUser);
+      const token = jwt.sign({ _id: user[0].id }, jwt_secret, {
         expiresIn: jwt_expires,
       });
 
@@ -173,7 +183,7 @@ exports.verify = async (req, res) => {
         code: 200,
         status: "success",
         data: {
-          user: updatedUser[0],
+          user: user[0],
           accessToken: token,
           msg: "User logged in successfully",
         },
