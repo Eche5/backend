@@ -11,6 +11,7 @@ const { Op } = require("sequelize");
 
 exports.createUser = async (req, res) => {
   const errors = validationResult(req);
+  console.log("dataerrors", errors[0]);
   if (!errors.isEmpty()) {
     return res.status(422).json({
       success: false,
@@ -31,7 +32,6 @@ exports.createUser = async (req, res) => {
       phonenumber,
       role,
     });
-    console.log(user);
     if (user) {
       await sendVerification(user);
       return res.status(201).json({
