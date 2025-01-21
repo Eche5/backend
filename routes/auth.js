@@ -5,7 +5,7 @@ const { user, password, email } = require("../middleware/validation");
 const { auth } = require("../middleware/auth");
 const { super_admin } = require("../middleware/role");
 
-router.route("/register").post([user, password], controller.createUser);
+router.route("/register").post([password], controller.createUser);
 router
   .route("/registerTeam")
   .post([auth, super_admin], controller.createTeamMembers);

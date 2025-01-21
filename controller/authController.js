@@ -10,19 +10,20 @@ const Users = require("../models/users");
 const { Op } = require("sequelize");
 
 exports.createUser = async (req, res) => {
-  const errors = validationResult(req);
-  console.log("dataerrors", errors[0]);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      code: 422,
-      status: "error",
-      data: errors.array()[0],
-    });
-  }
   const { email, password, first_name, last_name, phonenumber, role } =
     req.body;
   try {
+    const existinguser = await Users.findAll({
+      where: {
+        email: email,
+      },
+    });
+    if (existinguser.length === 1) {
+      return res.status(404).json({
+        success: false,
+        data: { msg: "User exists with this email" },
+      });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await Users.create({
       email,
@@ -45,7 +46,7 @@ exports.createUser = async (req, res) => {
         .json({ success: false, message: "Database error" });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
