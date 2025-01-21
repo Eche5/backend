@@ -7,25 +7,29 @@ const Parcels = require("../models/parcels");
 const ParcelTracking = require("../models/parcelTracking");
 
 exports.getAllTeamMembers = async (req, res) => {
-  const users = await Users.findAll({
-    where: {
-      role: {
-        [Op.notIn]: ["user", "super_admin"],
+  try {
+    const users = await Users.findAll({
+      where: {
+        role: {
+          [Op.notIn]: ["user", "super_admin"],
+        },
       },
-    },
-  });
-  if (!users) {
-    return res
-      .status(500)
-      .json({ success: false, message: "something went wrong" });
-  } else {
-    return res.status(200).json({
-      success: true,
-      code: 200,
-      users,
-      status: "success",
-      msg: `fetched team members`,
     });
+    if (!users) {
+      return res
+        .status(500)
+        .json({ success: false, message: "something went wrong" });
+    } else {
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        users,
+        status: "success",
+        msg: `fetched team members`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -46,25 +50,9 @@ exports.getAllPayments = async (req, res) => {
 };
 
 exports.updateParcel = async (req, res) => {
-  const {
-    id,
-    tracking_number,
-    parcel_weight,
-    status,
-    estimated_delivery_date,
-    receiver_first_name,
-    receiver_last_name,
-    receiver_phone_number,
-    receiver_email,
-    receiver_street_address,
-    receiver_city,
-    receiver_landmark,
-    conversion_status,
-    receiver_state,
-  } = req.body;
-
-  const updateParcel = await Parcels.update(
-    {
+  try {
+    const {
+      id,
       tracking_number,
       parcel_weight,
       status,
@@ -78,33 +66,54 @@ exports.updateParcel = async (req, res) => {
       receiver_landmark,
       conversion_status,
       receiver_state,
-    },
-    { where: { id: id } }
-  );
-  if (updateParcel) {
-    const createHistory = await ParcelTracking.create({
-      tracking_number,
-      status,
-    });
+    } = req.body;
 
-    if (createHistory) {
-      const parcel = await Parcels.findAll({ where: { id } });
-
-      await sendParcelUpdate(
-        [parcel[0].email, parcel[0].receiver_email],
-        parcel[0].first_name,
-        parcel[0]
-      );
-
-      return res.status(200).json({
-        success: true,
-        code: 200,
-        parcel: parcel[0],
-        user: parcel,
-        status: "success",
-        msg: `Updated parcel successfully`,
+    const updateParcel = await Parcels.update(
+      {
+        tracking_number,
+        parcel_weight,
+        status,
+        estimated_delivery_date,
+        receiver_first_name,
+        receiver_last_name,
+        receiver_phone_number,
+        receiver_email,
+        receiver_street_address,
+        receiver_city,
+        receiver_landmark,
+        conversion_status,
+        receiver_state,
+      },
+      { where: { id: id } }
+    );
+    if (updateParcel) {
+      const createHistory = await ParcelTracking.create({
+        tracking_number,
+        status,
       });
+
+      if (createHistory) {
+        const parcel = await Parcels.findAll({ where: { id } });
+
+        await sendParcelUpdate(
+          [parcel[0].email, parcel[0].receiver_email],
+          parcel[0].first_name,
+          parcel[0]
+        );
+
+        return res.status(200).json({
+          success: true,
+          code: 200,
+          parcel: parcel[0],
+          user: parcel,
+          status: "success",
+          msg: `Updated parcel successfully`,
+        });
+      }
     }
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return false;
   }
 };
 
@@ -304,7 +313,6 @@ exports.getAllRegisteredUsers = async (req, res) => {
   const users = await Users.findAll({
     where: { role: "user", is_verified: true },
   });
-  console.log(users);
   if (!users) {
     return res.status(404).json({
       status: false,

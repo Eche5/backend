@@ -11,6 +11,7 @@ const Zoning = require("../models/zoning");
 const RatePricingLocal = require("../models/ratePricingLocal");
 const Users = require("../models/users");
 const Payments = require("../models/payments");
+
 exports.GetAllParcels = async (req, res) => {
   const parcels = await Parcels.findAll({
     where: {
@@ -97,9 +98,7 @@ exports.startPayment = async (req, res, next) => {
 
 exports.createPayment = async (req, res) => {
   try {
-    console.log(req.query);
     const response = await paymentInstance.createPayment(req.query);
-    console.log(response);
     const newStatus = response?.status === "success" ? "Paid" : "Failed";
     const parcel = await Parcels.findAll({
       where: { tracking_number: response.tracking_number },
@@ -133,94 +132,111 @@ exports.createPayment = async (req, res) => {
 
 exports.shippingRate = async (req, res) => {
   const { country, weight } = req.body;
-
-  const zoningQuery = await Zoning.findOne({
-    where: { country },
-  });
-  if (zoningQuery) {
-    const zone = zoningQuery.zone;
-
-    const ratePricingQuery = await RatePricingTest.findAll({
-      where: {
-        zone,
-        weight_from: { [Op.eq]: weight },
-      },
-      attributes: ["rate", "shipping_type"],
+  try {
+    const zoningQuery = await Zoning.findOne({
+      where: { country },
     });
+    if (zoningQuery) {
+      const zone = zoningQuery.zone;
 
-    if (ratePricingQuery.length > 0) {
-      return res.status(200).json({
-        success: true,
-        status: "Shipping rates found",
-        rates: ratePricingQuery,
+      const ratePricingQuery = await RatePricingTest.findAll({
+        where: {
+          zone,
+          weight_from: { [Op.eq]: weight },
+        },
+        attributes: ["rate", "shipping_type"],
       });
+
+      if (ratePricingQuery.length > 0) {
+        return res.status(200).json({
+          success: true,
+          status: "Shipping rates found",
+          rates: ratePricingQuery,
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "No shipping rates found for the given weight.",
+        });
+      }
     } else {
       return res.status(404).json({
         success: false,
-        message: "No shipping rates found for the given weight.",
+        message: "Zoning information not found for the provided country.",
       });
     }
-  } else {
-    return res.status(404).json({
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
       success: false,
-      message: "Zoning information not found for the provided country.",
+      message: "Database error",
+      error,
     });
   }
 };
 
 exports.localshippingrate = async (req, res) => {
-  const { state, shipping_types, sender_state, city } = req.body;
-  const ratePricingQuery = await RatePricingLocal.findAll({
-    where: {
-      state: state,
-      [Op.or]: [{ sender_state: sender_state }, { sender_state: "ALL" }],
-      shipping_type: {
-        [Op.in]: shipping_types,
+  try {
+    const { state, shipping_types, sender_state, city } = req.body;
+    const ratePricingQuery = await RatePricingLocal.findAll({
+      where: {
+        state: state,
+        [Op.or]: [{ sender_state: sender_state }, { sender_state: "ALL" }],
+        shipping_type: {
+          [Op.in]: shipping_types,
+        },
       },
-    },
-    attributes: ["rate", "shipping_type", "duration"],
-  });
+      attributes: ["rate", "shipping_type", "duration"],
+    });
 
-  const additionalData = {
-    shipping_type: "standard",
-    rate: "8700.00",
-    duration:
-      "4-5 business days after the drop-off day (weekends and public holidays not included)",
-  };
-  if (ratePricingQuery) {
-    let combinedResults = [...ratePricingQuery];
-    if (
-      (city === "Abuja" && sender_state === "Lagos") ||
-      (city === "Port Harcourt" && sender_state === "Lagos") ||
-      (city === "Port Harcourt" && sender_state === "Abuja") ||
-      (city === "Lagos" && sender_state === "Abuja")
-    ) {
-      combinedResults = combinedResults.filter(
-        (rate) =>
-          rate.shipping_type === "next_day_doorstep" ||
-          rate.shipping_type === "next_day_terminal" ||
-          rate.shipping_type === "economy"
-      );
-    } else if (
-      city === "Port Harcourt" ||
-      sender_state !== "Lagos" ||
-      sender_state !== "Abuja"
-    ) {
-      combinedResults = combinedResults.filter(
-        (rate) =>
-          rate.shipping_type === "economy" ||
-          rate.shipping_type === "next_day_doorstep"
-      );
-    } else {
-      combinedResults = combinedResults.filter(
-        (rate) => rate.shipping_type !== "next_day_terminal"
-      );
+    const additionalData = {
+      shipping_type: "standard",
+      rate: "8700.00",
+      duration:
+        "4-5 business days after the drop-off day (weekends and public holidays not included)",
+    };
+    if (ratePricingQuery) {
+      let combinedResults = [...ratePricingQuery];
+      if (
+        (city === "Abuja" && sender_state === "Lagos") ||
+        (city === "Port Harcourt" && sender_state === "Lagos") ||
+        (city === "Port Harcourt" && sender_state === "Abuja") ||
+        (city === "Lagos" && sender_state === "Abuja")
+      ) {
+        combinedResults = combinedResults.filter(
+          (rate) =>
+            rate.shipping_type === "next_day_doorstep" ||
+            rate.shipping_type === "next_day_terminal" ||
+            rate.shipping_type === "economy"
+        );
+      } else if (
+        city === "Port Harcourt" ||
+        sender_state !== "Lagos" ||
+        sender_state !== "Abuja"
+      ) {
+        combinedResults = combinedResults.filter(
+          (rate) =>
+            rate.shipping_type === "economy" ||
+            rate.shipping_type === "next_day_doorstep"
+        );
+      } else {
+        combinedResults = combinedResults.filter(
+          (rate) => rate.shipping_type !== "next_day_terminal"
+        );
+      }
+      combinedResults?.push(additionalData);
+      res.status(200).json({
+        success: true,
+        message: "Shipping rates found",
+        rates: combinedResults,
+      });
     }
-    combinedResults?.push(additionalData);
-    res.status(200).json({
-      success: true,
-      message: "Shipping rates found",
-      rates: combinedResults,
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Database error",
+      error,
     });
   }
 };
@@ -300,59 +316,9 @@ exports.payThroughWallet = async (req, res) => {
   const generateTrackingNumber = () => {
     return "TRK" + Math.random().toString().slice(2, 12).padStart(10, "0");
   };
-
-  const tracking_number = generateTrackingNumber();
-  const {
-    first_name,
-    last_name,
-    phone_number,
-    email,
-    city,
-    region,
-    postal_code,
-    social_media_handle,
-    receiver_first_name,
-    receiver_last_name,
-    receiver_email,
-    receiver_phone_number,
-    receiver_city,
-    receiver_region,
-    receiver_postal_code,
-    receiver_social_media_handle,
-    street_address,
-    receiver_street_address,
-    insurance = 0,
-    fragile = 0,
-    parcel_weight,
-    parcel_price,
-    package_description,
-    selected_deliverymode,
-    shipping_fee,
-    item_name,
-    quantity,
-    state,
-    receiver_state,
-    landmark,
-    receiver_landmark,
-  } = req.body;
-  const status = "Created";
-  const payment_status = "Paid";
-
-  const user = await Users.findAll({
-    where: {
-      email: req.user.email,
-    },
-  });
-  if (user) {
-    const balance = Number(user[0].wallet_amount);
-    if (balance < shipping_fee) {
-      return res.status(500).json({
-        success: false,
-        message: "insufficient funds, please top up",
-      });
-    }
-    const newShipment = await Parcels.create({
-      sender_id,
+  try {
+    const tracking_number = generateTrackingNumber();
+    const {
       first_name,
       last_name,
       phone_number,
@@ -371,50 +337,107 @@ exports.payThroughWallet = async (req, res) => {
       receiver_social_media_handle,
       street_address,
       receiver_street_address,
-      insurance,
-      fragile,
+      insurance = 0,
+      fragile = 0,
       parcel_weight,
       parcel_price,
       package_description,
       selected_deliverymode,
       shipping_fee,
-      payment_status,
-      status,
-      tracking_number,
       item_name,
       quantity,
       state,
       receiver_state,
       landmark,
       receiver_landmark,
+    } = req.body;
+    const status = "Created";
+    const payment_status = "Paid";
+
+    const user = await Users.findAll({
+      where: {
+        email: req.user.email,
+      },
     });
-    if (newShipment) {
-      const newAmount = Number(user[0]?.wallet_amount) - Number(shipping_fee);
-      await Users.update(
-        {
-          wallet_amount: newAmount,
-        },
-        { where: { email: req.user.email } }
-      );
-      await sendParcelUpdate(
-        req.user.email,
-        req.user.first_name,
+    if (user) {
+      const balance = Number(user[0].wallet_amount);
+      if (balance < shipping_fee) {
+        return res.status(500).json({
+          success: false,
+          message: "insufficient funds, please top up",
+        });
+      }
+      const newShipment = await Parcels.create({
+        sender_id,
+        first_name,
+        last_name,
+        phone_number,
+        email,
+        city,
+        region,
+        postal_code,
+        social_media_handle,
+        receiver_first_name,
+        receiver_last_name,
+        receiver_email,
+        receiver_phone_number,
+        receiver_city,
+        receiver_region,
+        receiver_postal_code,
+        receiver_social_media_handle,
+        street_address,
+        receiver_street_address,
+        insurance,
+        fragile,
+        parcel_weight,
+        parcel_price,
+        package_description,
+        selected_deliverymode,
+        shipping_fee,
+        payment_status,
+        status,
         tracking_number,
-        newShipment[0]?.state
-      );
-      return res.status(201).json({
-        success: true,
-        code: 200,
-        tracking_number,
-        status: "success",
-        msg: `Shipment with tracking number ${tracking_number}  created successfully`,
+        item_name,
+        quantity,
+        state,
+        receiver_state,
+        landmark,
+        receiver_landmark,
       });
+      if (newShipment) {
+        const newAmount = Number(user[0]?.wallet_amount) - Number(shipping_fee);
+        await Users.update(
+          {
+            wallet_amount: newAmount,
+          },
+          { where: { email: req.user.email } }
+        );
+        await sendParcelUpdate(
+          req.user.email,
+          req.user.first_name,
+          tracking_number,
+          newShipment[0]?.state
+        );
+        return res.status(201).json({
+          success: true,
+          code: 200,
+          tracking_number,
+          status: "success",
+          msg: `Shipment with tracking number ${tracking_number}  created successfully`,
+        });
+      }
     }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Database error",
+      error,
+    });
   }
 };
 
 const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
-  console.log(email, first_name, tracking_number, state);
   const dropOffLocations = [
     {
       city: "Yaba",
