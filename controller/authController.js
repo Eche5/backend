@@ -12,6 +12,18 @@ const { Op } = require("sequelize");
 exports.createUser = async (req, res) => {
   const { email, password, first_name, last_name, phonenumber, role } =
     req.body;
+
+  const errors = validationResult(req);
+  console.log(errors.isEmpty());
+  if (!errors.isEmpty()) {
+    return res.status(401).json({
+      success: false,
+      code: 422,
+      status: "error",
+      data: errors.array()[0],
+    });
+  }
+  
   try {
     const existinguser = await Users.findAll({
       where: {
@@ -310,8 +322,9 @@ const sendLoginDetails = async (email, first_name, password) => {
 exports.login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
+    console.log(errors.isEmpty());
     if (!errors.isEmpty()) {
-      return res.status(422).json({
+      return res.status(401).json({
         success: false,
         code: 422,
         status: "error",
