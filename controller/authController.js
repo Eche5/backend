@@ -446,40 +446,49 @@ exports.forgotPassword = async (req, res, next) => {
 };
 
 exports.resetPassword = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({
-      success: false,
-      code: 422,
-      status: "error",
-      data: errors.array()[0],
-    });
-  }
+  try {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        success: false,
+        code: 422,
+        status: "error",
+        data: errors.array()[0],
+      });
+    }
 
-  const { resetToken, password } = req.body;
-  const user = await Users.findAll({
-    where: {
-      resetToken: resetToken,
-      resetTokenExpires: {
-        [Op.gt]: Math.floor(Date.now() / 1000),
-      },
-    },
-  });
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      code: 401,
-      status: "error",
-      data: {
-        path: "resetToken",
-        msg: "Invalid token session",
-        value: resetToken,
-        location: "body",
-        type: "field",
+    const { resetToken, password } = req.body;
+
+    // Find user by reset token
+    const user = await Users.findAll({
+      where: {
+        resetToken: resetToken,
+        resetTokenExpires: {
+          [Op.gt]: Math.floor(Date.now() / 1000), // Token expiration check
+        },
       },
     });
-  } else {
+
+    if (!user || user.length === 0) {
+      return res.status(400).json({
+        success: false,
+        code: 401,
+        status: "error",
+        data: {
+          path: "resetToken",
+          msg: "Invalid or expired token",
+          value: resetToken,
+          location: "body",
+          type: "field",
+        },
+      });
+    }
+
+    // Hash the new password
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Update user password and reset token fields
     await Users.update(
       {
         password: hashedPassword,
@@ -488,14 +497,27 @@ exports.resetPassword = async (req, res, next) => {
       },
       { where: { id: user[0]?.id } }
     );
+
+    // Return success response
     return res.status(200).json({
       success: true,
       code: 200,
       status: "success",
       data: { msg: "Password reset was successful" },
     });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error resetting password:", error);
+
+    return res.status(500).json({
+      success: false,
+      code: 500,
+      status: "error",
+      data: { msg: "An internal server error occurred." },
+    });
   }
 };
+
 const sendresetTokenemail = async (email, resetToken) => {
   let MailGenerator = new Mailgen({
     theme: "default",
