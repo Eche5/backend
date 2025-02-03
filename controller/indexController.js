@@ -118,7 +118,7 @@ exports.createPayment = async (req, res) => {
         },
         { where: { tracking_number: response.tracking_number } }
       );
-
+      console.log(updatedParce);
       return res.status(201).json({
         success: true,
         status: "Payment Created",
@@ -299,10 +299,11 @@ exports.startWalletPayment = async (req, res, next) => {
     if (user) {
       const newAmount =
         Number(user[0]?.wallet_amount) + Number(response.amount);
-      await Users.update(
+      const updatedUser = await Users.update(
         { wallet_amount: newAmount },
         { where: { email: response.email } }
       );
+      console.log(updatedUser);
       return res.status(201).json({
         success: true,
         status: "Payment Created",
