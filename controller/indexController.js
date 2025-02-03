@@ -181,7 +181,8 @@ exports.localshippingrate = async (req, res) => {
     const ratePricingQuery = await RatePricingLocal.findAll({
       where: {
         state: state,
-        [Op.or]: [{ sender_state: sender_state }, { sender_state: "ALL" }],
+        city: city,
+        [Op.or]: [{ sender_state: sender_state }],
         shipping_type: {
           [Op.in]: shipping_types,
         },
@@ -207,6 +208,7 @@ exports.localshippingrate = async (req, res) => {
           (rate) =>
             rate.shipping_type === "next_day_doorstep" ||
             rate.shipping_type === "next_day_terminal" ||
+            rate.shipping_type === "economy_next_day_terminal" ||
             rate.shipping_type === "economy"
         );
       } else if (
@@ -217,6 +219,7 @@ exports.localshippingrate = async (req, res) => {
         combinedResults = combinedResults.filter(
           (rate) =>
             rate.shipping_type === "economy" ||
+            rate.shipping_type === "economy_next_day_terminal" ||
             rate.shipping_type === "next_day_doorstep"
         );
       } else {
