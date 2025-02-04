@@ -208,7 +208,7 @@ exports.localshippingrate = async (req, res) => {
           (rate) =>
             rate.shipping_type === "next_day_doorstep" ||
             rate.shipping_type === "next_day_terminal" ||
-            rate.shipping_type === "economy_next_day_terminal" ||
+            rate.shipping_type === "economy_terminal" ||
             rate.shipping_type === "economy"
         );
       } else if (
@@ -219,7 +219,7 @@ exports.localshippingrate = async (req, res) => {
         combinedResults = combinedResults.filter(
           (rate) =>
             rate.shipping_type === "economy" ||
-            rate.shipping_type === "economy_next_day_terminal" ||
+            rate.shipping_type === "economy_terminal" ||
             rate.shipping_type === "next_day_doorstep"
         );
       } else {
