@@ -5,6 +5,8 @@ const Payments = require("../models/payments");
 const { Op } = require("sequelize");
 const Parcels = require("../models/parcels");
 const ParcelTracking = require("../models/parcelTracking");
+const axios = require("axios");
+const qs = require("qs");
 
 exports.getAllTeamMembers = async (req, res) => {
   try {
@@ -101,6 +103,7 @@ exports.updateParcel = async (req, res) => {
           parcel[0]
         );
 
+        await sendWhatsAppMessage(parcel[0]);
         return res.status(200).json({
           success: true,
           code: 200,
@@ -186,6 +189,52 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
     return false;
   }
 };
+
+async function sendWhatsAppMessage(parcelData) {
+  try {
+    const senderParameters = `${parcelData.first_name}, ${parcelData.tracking_number}, ${parcelData.status}, ${parcelData.parcel_weight}kg, ${parcelData.estimated_delivery_date}`;
+
+    const receiverParameters = `${parcelData.receiver_first_name}, ${parcelData.tracking_number}, ${parcelData.status}, ${parcelData.parcel_weight}kg, ${parcelData.estimated_delivery_date}`;
+
+    const senderPhone = parcelData.phone_number.replace("+", "");
+    const receiverPhone = parcelData.receiver_phone_number.replace("+", "");
+
+    const recipients =
+      senderPhone === receiverPhone
+        ? [
+            { phone: senderPhone, parameters: senderParameters }, 
+          ]
+        : [
+            { phone: senderPhone, parameters: senderParameters },
+            { phone: receiverPhone, parameters: receiverParameters },
+          ];
+
+    const promises = recipients.map(async (recipient) => {
+      const data = qs.stringify({
+        token: process.env.TOKEN,
+        recipient: recipient.phone,
+        template_code: process.env.TEMPLATE_CODE,
+        parameters: recipient.parameters,
+      });
+
+      const config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://my.kudisms.net/api/whatsapp",
+        headers: {},
+        data: data,
+      };
+
+      return axios(config);
+    });
+
+    const responses = await Promise.all(promises);
+    console.log(responses);
+    return responses.map((response) => response.data);
+  } catch (error) {
+    throw error;
+  }
+}
 
 exports.getParcelByTrackingNumber = async (req, res) => {
   const { tracking_number } = req.params;
