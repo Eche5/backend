@@ -430,7 +430,7 @@ exports.payThroughWallet = async (req, res) => {
           tracking_number,
           newShipment[0]?.state
         );
-        await sendWhatsAppMessage(parcel[0]);
+        await sendWhatsAppMessage(newShipment[0]);
 
         return res.status(201).json({
           success: true,
