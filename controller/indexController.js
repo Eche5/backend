@@ -373,6 +373,8 @@ exports.payThroughWallet = async (req, res) => {
     });
     if (user) {
       const balance = Number(user[0].wallet_amount);
+      console.log(user);
+      console.log(shipping_fee);
       if (balance < shipping_fee) {
         return res.status(500).json({
           success: false,
@@ -430,12 +432,14 @@ exports.payThroughWallet = async (req, res) => {
           tracking_number,
           state
         );
-        const parcel = [
+        const parcel = {
           first_name,
           receiver_first_name,
+          phone_number,
+          receiver_phone_number,
           tracking_number,
-          weight_from,
-        ];
+          parcel_weight,
+        };
         await sendWhatsAppMessage(parcel);
         return res.status(201).json({
           success: true,
@@ -449,7 +453,7 @@ exports.payThroughWallet = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      success: error === "insufficient funds, please top up" ? true : false,
+      success: false,
       message: "Database error",
       error,
     });
@@ -556,6 +560,7 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
 };
 
 async function sendWhatsAppMessage(parcelData) {
+  console.log(parcelData);
   try {
     const senderParameters = `${parcelData.first_name}, ${parcelData.tracking_number}, confirmed, ${parcelData.parcel_weight}kg, N/A`;
 
@@ -592,7 +597,7 @@ async function sendWhatsAppMessage(parcelData) {
     });
 
     const responses = await Promise.all(promises);
-
+    console.log(responses);
     return responses.map((response) => response.data);
   } catch (error) {
     throw error;
