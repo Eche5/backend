@@ -328,41 +328,43 @@ exports.payThroughWallet = async (req, res) => {
   const generateTrackingNumber = () => {
     return "TRK" + Math.random().toString().slice(2, 12).padStart(10, "0");
   };
+
+  const tracking_number = generateTrackingNumber();
+  const {
+    first_name,
+    last_name,
+    phone_number,
+    email,
+    city,
+    region,
+    postal_code,
+    social_media_handle,
+    receiver_first_name,
+    receiver_last_name,
+    receiver_email,
+    receiver_phone_number,
+    receiver_city,
+    receiver_region,
+    receiver_postal_code,
+    receiver_social_media_handle,
+    street_address,
+    receiver_street_address,
+    insurance = 0,
+    fragile = 0,
+    parcel_weight,
+    parcel_price,
+    package_description,
+    selected_deliverymode,
+    shipping_fee,
+    item_name,
+    quantity,
+    state,
+    receiver_state,
+    landmark,
+    receiver_landmark,
+  } = req.body;
   try {
-    const tracking_number = generateTrackingNumber();
-    const {
-      first_name,
-      last_name,
-      phone_number,
-      email,
-      city,
-      region,
-      postal_code,
-      social_media_handle,
-      receiver_first_name,
-      receiver_last_name,
-      receiver_email,
-      receiver_phone_number,
-      receiver_city,
-      receiver_region,
-      receiver_postal_code,
-      receiver_social_media_handle,
-      street_address,
-      receiver_street_address,
-      insurance = 0,
-      fragile = 0,
-      parcel_weight,
-      parcel_price,
-      package_description,
-      selected_deliverymode,
-      shipping_fee,
-      item_name,
-      quantity,
-      state,
-      receiver_state,
-      landmark,
-      receiver_landmark,
-    } = req.body;
+ 
     const status = "Created";
     const payment_status = "Paid";
 
@@ -379,6 +381,7 @@ exports.payThroughWallet = async (req, res) => {
           message: "insufficient funds, please top up",
         });
       }
+
       const newShipment = await Parcels.create({
         sender_id,
         first_name,
@@ -416,6 +419,8 @@ exports.payThroughWallet = async (req, res) => {
         landmark,
         receiver_landmark,
       });
+
+      console.log(newShipment);
       if (newShipment) {
         const newAmount = Number(user[0]?.wallet_amount) - Number(shipping_fee);
         await Users.update(
@@ -424,12 +429,14 @@ exports.payThroughWallet = async (req, res) => {
           },
           { where: { email: req.user.email } }
         );
+
         await sendParcelUpdate(
           req.user.email,
           req.user.first_name,
           tracking_number,
           newShipment[0]?.state
         );
+        console.log(newShipment);
         await sendWhatsAppMessage(newShipment[0]);
 
         return res.status(201).json({

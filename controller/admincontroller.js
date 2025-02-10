@@ -201,9 +201,7 @@ async function sendWhatsAppMessage(parcelData) {
 
     const recipients =
       senderPhone === receiverPhone
-        ? [
-            { phone: senderPhone, parameters: senderParameters }, 
-          ]
+        ? [{ phone: senderPhone, parameters: senderParameters }]
         : [
             { phone: senderPhone, parameters: senderParameters },
             { phone: receiverPhone, parameters: receiverParameters },
