@@ -11,7 +11,8 @@ const Zoning = require("../models/zoning");
 const RatePricingLocal = require("../models/ratePricingLocal");
 const Users = require("../models/users");
 const Payments = require("../models/payments");
-
+const axios = require("axios");
+const qs = require("qs");
 exports.GetAllParcels = async (req, res) => {
   const parcels = await Parcels.findAll({
     where: {
@@ -118,6 +119,13 @@ exports.createPayment = async (req, res) => {
         },
         { where: { tracking_number: response.tracking_number } }
       );
+      await sendParcelUpdate(
+        req.user.email,
+        req.user.first_name,
+        response.tracking_number,
+        parcel[0]?.state
+      );
+      await sendWhatsAppMessage(parcel[0]);
       console.log(updatedParce);
       return res.status(201).json({
         success: true,
@@ -422,6 +430,8 @@ exports.payThroughWallet = async (req, res) => {
           tracking_number,
           newShipment[0]?.state
         );
+        await sendWhatsAppMessage(parcel[0]);
+
         return res.status(201).json({
           success: true,
           code: 200,
@@ -539,3 +549,47 @@ const sendParcelUpdate = async (email, first_name, tracking_number, state) => {
     return false;
   }
 };
+
+async function sendWhatsAppMessage(parcelData) {
+  try {
+    const senderParameters = `${parcelData.first_name}, ${parcelData.tracking_number}, confirmed, ${parcelData.parcel_weight}kg, N/A`;
+
+    const receiverParameters = `${parcelData.receiver_first_name}, ${parcelData.tracking_number}, confirmed, ${parcelData.parcel_weight}kg, N/A`;
+
+    const senderPhone = parcelData.phone_number.replace("+", "");
+    const receiverPhone = parcelData.receiver_phone_number.replace("+", "");
+
+    const recipients =
+      senderPhone === receiverPhone
+        ? [{ phone: senderPhone, parameters: senderParameters }]
+        : [
+            { phone: senderPhone, parameters: senderParameters },
+            { phone: receiverPhone, parameters: receiverParameters },
+          ];
+
+    const promises = recipients.map(async (recipient) => {
+      const data = qs.stringify({
+        token: process.env.TOKEN,
+        recipient: recipient.phone,
+        template_code: process.env.TEMPLATE_CODE,
+        parameters: recipient.parameters,
+      });
+
+      const config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://my.kudisms.net/api/whatsapp",
+        headers: {},
+        data: data,
+      };
+
+      return axios(config);
+    });
+
+    const responses = await Promise.all(promises);
+    console.log(responses);
+    return responses.map((response) => response.data);
+  } catch (error) {
+    throw error;
+  }
+}
