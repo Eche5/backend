@@ -126,7 +126,7 @@ exports.createPayment = async (req, res) => {
         parcel[0]?.state
       );
       await sendWhatsAppMessage(parcel[0]);
-      console.log(updatedParce);
+
       return res.status(201).json({
         success: true,
         status: "Payment Created",
@@ -437,7 +437,6 @@ exports.payThroughWallet = async (req, res) => {
           weight_from,
         ];
         await sendWhatsAppMessage(parcel);
-
         return res.status(201).json({
           success: true,
           code: 200,
@@ -450,7 +449,7 @@ exports.payThroughWallet = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      success: false,
+      success: error === "insufficient funds, please top up" ? true : false,
       message: "Database error",
       error,
     });
@@ -593,7 +592,7 @@ async function sendWhatsAppMessage(parcelData) {
     });
 
     const responses = await Promise.all(promises);
-    console.log(responses);
+
     return responses.map((response) => response.data);
   } catch (error) {
     throw error;
