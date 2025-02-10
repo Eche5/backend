@@ -428,9 +428,15 @@ exports.payThroughWallet = async (req, res) => {
           req.user.email,
           req.user.first_name,
           tracking_number,
-          newShipment[0]?.state
+          state
         );
-        await sendWhatsAppMessage(newShipment[0]);
+        const parcel = [
+          first_name,
+          receiver_first_name,
+          tracking_number,
+          weight_from,
+        ];
+        await sendWhatsAppMessage(parcel);
 
         return res.status(201).json({
           success: true,
