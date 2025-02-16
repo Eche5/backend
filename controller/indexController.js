@@ -14,18 +14,39 @@ const Payments = require("../models/payments");
 const axios = require("axios");
 const qs = require("qs");
 exports.GetAllParcels = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10; // Default 10 per page
+  const offset = (page - 1) * pageSize;
   const parcels = await Parcels.findAll({
     where: {
       payment_status: "paid",
     },
     order: [["created_at", "DESC"]],
+    offset: offset,
+    limit: 10,
   });
+
+  const Allparcels = await Parcels.findAll({
+    where: {
+      payment_status: "paid",
+    },
+    order: [["created_at", "DESC"]],
+  });
+
+  const totalItems = await Parcels.count({
+    where: { payment_status: "paid" },
+  });
+
   if (!parcels) {
     return res.status(500).json({ success: false, message: "Database error" });
   } else {
     return res.status(200).json({
       status: true,
       parcels,
+      totalItems,
+      Allparcels,
+      totalPages: Math.ceil(totalItems / pageSize),
+      currentPage: page,
     });
   }
 };
