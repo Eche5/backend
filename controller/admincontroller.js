@@ -36,8 +36,16 @@ exports.getAllTeamMembers = async (req, res) => {
 };
 
 exports.getAllPayments = async (req, res) => {
-  const query = "SELECT * FROM pickupman.payments";
-  const payments = await Payments.findAll();
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const offset = (page - 1) * pageSize;
+  const payments = await Payments.findAll({
+    order: [["created_at", "DESC"]],
+    offset: offset,
+    limit: 10,
+  });
+
+  const totalItems = await Payments.count();
   if (!payments) {
     return res.status(500).json({ success: false, message: "Database error" });
   } else {
@@ -45,8 +53,11 @@ exports.getAllPayments = async (req, res) => {
       success: true,
       code: 200,
       payments,
+      totalPages: Math.ceil(totalItems / pageSize),
+      currentPage: page,
+      totalItems,
       status: "success",
-      msg: `fetched team members`,
+      msg: `fetched all payments`,
     });
   }
 };
