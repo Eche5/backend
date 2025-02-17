@@ -99,17 +99,28 @@ exports.createshipment = async (req, res) => {
 
 exports.GetUserParcel = async (req, res) => {
   const id = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const offset = (page - 1) * pageSize;
   try {
     const parcels = await Parcels.findAll({
-      where: { sender_id: id },
+      where: { sender_id: id, payment_status: "paid" },
       order: [["created_at", "DESC"]],
-      limit: 8,
+      offset: offset,
+      limit: 10,
+    });
+
+    const totalItems = await Parcels.count({
+      where: { sender_id: id, payment_status: "paid" },
     });
     if (!parcels) {
       return res.status(500).json({ success: false, message: parcels });
     } else {
       return res.status(200).json({
         success: true,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+        currentPage: page,
         parcels: parcels,
       });
     }
