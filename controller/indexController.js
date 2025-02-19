@@ -18,42 +18,59 @@ exports.GetAllParcels = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const offset = (page - 1) * pageSize;
+
+    const { startDate, endDate } = req.query;
+    let dateFilter = {};
+
+    if (startDate && endDate) {
+      dateFilter = {
+        created_at: {
+          [Op.between]: [new Date(startDate), new Date(endDate)],
+        },
+      };
+    } else if (startDate) {
+      dateFilter = {
+        created_at: {
+          [Op.gte]: new Date(startDate),
+        },
+      };
+    } else if (endDate) {
+      dateFilter = {
+        created_at: {
+          [Op.lte]: new Date(endDate),
+        },
+      };
+    }
+
+    const whereCondition = {
+      payment_status: "paid",
+      ...dateFilter,
+    };
+
     const parcels = await Parcels.findAll({
-      where: {
-        payment_status: "paid",
-      },
+      where: whereCondition,
       order: [["created_at", "DESC"]],
-      offset: offset,
-      limit: 10,
+      offset,
+      limit: pageSize,
     });
 
     const Allparcels = await Parcels.findAll({
-      where: {
-        payment_status: "paid",
-      },
+      where: whereCondition,
       order: [["created_at", "DESC"]],
     });
 
-    const totalItems = await Parcels.count({
-      where: { payment_status: "paid" },
-    });
+    const totalItems = await Parcels.count({ where: whereCondition });
 
-    if (!parcels) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    } else {
-      return res.status(200).json({
-        status: true,
-        parcels,
-        totalItems,
-        Allparcels,
-        totalPages: Math.ceil(totalItems / pageSize),
-        currentPage: page,
-      });
-    }
+    return res.status(200).json({
+      status: true,
+      parcels,
+      totalItems,
+      Allparcels,
+      totalPages: Math.ceil(totalItems / pageSize),
+      currentPage: page,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
