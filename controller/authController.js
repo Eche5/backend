@@ -23,7 +23,7 @@ exports.createUser = async (req, res) => {
       data: errors.array()[0],
     });
   }
-  
+
   try {
     const existinguser = await Users.findAll({
       where: {
@@ -87,40 +87,116 @@ const generatePassword = () => {
 };
 
 const sendVerification = async (user) => {
-  let MailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "Pickupmanng",
-      link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
-      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
-      logoHeight: "30px",
-    },
-  });
   const link = `https://www.pickupmanng.ng/verify/${user.id}`;
-  let response = {
-    body: {
-      name: user.first_name,
-      intro:
-        "We are thrilled to have you join us. Verify your email address to get started and access the resources available on our platform.",
-      action: {
-        instructions: "Click the button below to verify your account:",
-        button: {
-          color: "#22BC66",
-          text: "Verify your account",
-          link,
-        },
-      },
-      signature: "Sincerely",
-    },
-  };
 
-  let mail = MailGenerator.generate(response);
-  let message = {
+  const mailContent = `
+ <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f3f3f3;">
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="background-color: #f3f3f3; padding: 20px;"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="600"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="background-color: #ffffff; border-radius: 8px; overflow: hidden;"
+          >
+            <!-- Header -->
+            <tr style="background-color: #74787e;">
+              <td style="padding: 15px;">
+                <table width="100%">
+                  <tr>
+                    <td style="text-align: left;">
+                      <img
+                        src="https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a"
+                        width="120"
+                        height="40"
+                        alt="Pickupman Logo"
+                        style="display: block; margin: 0;"
+                      />
+                    </td>
+                   <td style="text-align: right;">
+                     <p style="color: white; font-size: 14px; margin: 0;">
+                       <a href="mailto:Support@Pickupmanng.ng" style="color: white; text-decoration: none;">
+                          Support@Pickupmanng.ng
+                       </a>
+                     </p>
+                    </td>
+
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 40px; text-align: center;">
+                <h2 style="color: #333; font-size: 16px; margin-bottom: 20px;">
+                  Pickupmanng Account Verification
+                </h2>
+                <p style="color: #555; font-size: 18px;">Hi <strong>${user?.first_name}</strong>,</p>
+                <p style="color: #555; font-size: 16px; margin-bottom: 20px;">
+                  Thank you for signing up! Please verify your email address by
+                  clicking the button below.
+                </p>
+                <a
+                  href="${link}"
+                  style="display: inline-block; padding: 12px 24px; background-color: #333; color: white; text-decoration: none; font-size: 16px; border-radius: 5px; margin-bottom: 20px;"
+                >
+                  Verify Email
+                </a>
+                <p style="color: #777; font-size: 14px; margin-top: 10px;">
+                  If you didn’t create an account, you can ignore this email.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr style="background-color: #74787e;">
+              <td style="padding: 20px; text-align: center; color: white;">
+                <img
+                  src="https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a"
+                  width="120"
+                  height="40"
+                  alt="Pickupman Logo"
+                  style="margin-bottom: 10px;"
+                />
+                <p style="font-size: 14px;">
+                  Pickupman NG is a leading cargo and shipping company in
+                  Nigeria, specializing in efficient, reliable logistics
+                  solutions.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+ `; 
+
+
+  const message = {
     from: process.env.EMAIL,
     to: user.email,
-    subject: "Verify email",
-    html: mail,
+    subject: "Verify your email",
+    html: mailContent,
   };
 
   const transporter = nodemailer.createTransport({
