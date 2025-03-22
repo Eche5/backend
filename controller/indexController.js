@@ -20,12 +20,14 @@ exports.GetAllParcels = async (req, res) => {
     const offset = (page - 1) * pageSize;
 
     const { startDate, endDate } = req.query;
+    const endDates = new Date(endDate); // Assuming endDates is defined
+    endDates.setDate(endDates.getDate() + 1);
     let dateFilter = {};
 
     if (startDate && endDate) {
       dateFilter = {
         created_at: {
-          [Op.between]: [new Date(startDate), new Date(endDate)],
+          [Op.between]: [new Date(startDate), endDates],
         },
       };
     } else if (startDate) {
