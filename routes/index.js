@@ -13,10 +13,8 @@ router
   .get([auth], controller.createPayment)
   .post([auth], controller.startPayment);
 
-router
-  .route("/wallet/funding")
-  .post([auth], controller.startWalletFunding)
-  .get(controller.startWalletPayment);
+router.route("/wallet/funding").post(controller.startWalletFunding);
+router.route("/wallet/webhook").post(controller.startWalletPayment);
 
 router.route("/rate/international").post(controller.shippingRate);
 router.route("/rate/local").post(controller.localshippingrate);

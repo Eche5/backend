@@ -11,6 +11,8 @@ const Zoning = require("../models/zoning");
 const RatePricingLocal = require("../models/ratePricingLocal");
 const Users = require("../models/users");
 const Payments = require("../models/payments");
+const crypto = require("crypto");
+
 const axios = require("axios");
 const qs = require("qs");
 exports.GetAllParcels = async (req, res) => {
@@ -332,6 +334,14 @@ exports.startWalletFunding = async (req, res, next) => {
         amount,
       };
       const response = await walletpaymentInstance.startPayment(paymentData);
+      const newPayment = {
+        reference: response.data.reference,
+        amount: Number(amount) / 100,
+        email,
+        full_name: first_name + " " + last_name,
+        status: "pending",
+      };
+      const createnewPayment = await Payments.create(newPayment);
       return res.status(201).json({
         success: true,
         status: "Payment Started",
@@ -349,40 +359,64 @@ exports.startWalletFunding = async (req, res, next) => {
 
 exports.startWalletPayment = async (req, res, next) => {
   try {
-    const response = await walletpaymentInstance.createPayment(req.query);
-    const existingPayment = await Payments.findOne({
-      where: { reference: response.reference },
-    });
+    console.log("Webhook received:", req.body);
+    const hash = crypto
+      .createHmac("sha512", process.env.PAYSTACK_WEBHOOK_KEY)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
 
-    if (existingPayment && existingPayment.status === "success") {
-      return res.status(200).json({
-        success: true,
-        status: "Payment already processed",
-        data: { payment: existingPayment },
-      });
+    if (hash !== req.headers["x-paystack-signature"]) {
+      return res.status(401).send("Unauthorized");
     }
-    const user = await Users.findAll({
-      where: {
-        email: response?.email,
-      },
-    });
 
-    if (user) {
-      const newAmount =
-        Number(user[0]?.wallet_amount) + Number(response.amount);
-      const updatedUser = await Users.update(
-        { wallet_amount: newAmount },
-        { where: { email: response.email } }
-      );
-      console.log(updatedUser);
-      return res.status(201).json({
-        success: true,
-        status: "Payment Created",
-        data: { payment: response[0] },
+    const event = req.body;
+
+    // Only process successful charges
+    if (event.event === "charge.success") {
+      const paymentData = event.data;
+
+      // Find payment in database
+      const payment = await Payments.findOne({
+        where: { reference: paymentData.reference },
       });
+
+      if (!payment) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Payment not found" });
+      }
+
+      // Check if already processed
+      if (payment.status === "success") {
+        return res
+          .status(200)
+          .json({ success: true, message: "Payment already processed" });
+      }
+
+      // Update payment status
+      await payment.update({ status: "success" });
+
+      // Find user and update wallet
+      const user = await Users.findOne({
+        where: { email: paymentData.customer.email },
+      });
+
+      if (user) {
+        const newAmount =
+          Number(user.wallet_amount) + Number(paymentData.amount / 100); // Paystack amounts are in kobo
+        await Users.update(
+          { wallet_amount: newAmount },
+          { where: { email: paymentData.customer.email } }
+        );
+      }
+
+      return res.status(200).json({ success: true });
     }
+
+    res.status(200).json({ success: true, message: "Event not processed" });
   } catch (error) {
-    next(error);
+    console.error("Webhook error:", error);
+    res.status(500).json({ success: false, error: error });
   }
 };
 
@@ -436,8 +470,7 @@ exports.payThroughWallet = async (req, res) => {
     });
     if (user) {
       const balance = Number(user[0].wallet_amount);
-      console.log(user);
-      console.log(shipping_fee);
+
       if (balance < shipping_fee) {
         return res.status(500).json({
           success: false,
