@@ -321,7 +321,7 @@ exports.startWalletFunding = async (req, res, next) => {
   try {
     const { email, first_name, last_name } = req.user;
     const { amount } = req.body;
-
+    console.log(email, first_name, last_name);
     const user = await Users.findAll({
       where: {
         email: email,
@@ -333,10 +333,11 @@ exports.startWalletFunding = async (req, res, next) => {
         full_name: first_name + " " + last_name,
         amount,
       };
+
       const response = await walletpaymentInstance.startPayment(paymentData);
       const newPayment = {
         reference: response.data.reference,
-        amount: Number(amount) / 100,
+        amount: amount,
         email,
         full_name: first_name + " " + last_name,
         status: "pending",
@@ -370,7 +371,7 @@ exports.startWalletPayment = async (req, res, next) => {
     }
 
     const event = req.body;
-
+    console.log(event);
     // Only process successful charges
     if (event.event === "charge.success") {
       const paymentData = event.data;
@@ -400,6 +401,8 @@ exports.startWalletPayment = async (req, res, next) => {
       const user = await Users.findOne({
         where: { email: paymentData.customer.email },
       });
+
+      console.log(user);
 
       if (user) {
         const newAmount =
