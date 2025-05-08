@@ -365,7 +365,7 @@ exports.startWalletPayment = async (req, res, next) => {
       .createHmac("sha512", process.env.PAYSTACK_WEBHOOK_KEY)
       .update(JSON.stringify(req.body))
       .digest("hex");
-
+    console.log(hash);
     if (hash !== req.headers["x-paystack-signature"]) {
       console.log("Invalid signature");
       return res.status(401).send("Unauthorized");
@@ -383,6 +383,7 @@ exports.startWalletPayment = async (req, res, next) => {
       });
 
       if (!payment) {
+        console.log("Payment not found in database");
         return res
           .status(404)
           .json({ success: false, message: "Payment not found" });
@@ -408,10 +409,11 @@ exports.startWalletPayment = async (req, res, next) => {
       if (user) {
         const newAmount =
           Number(user.wallet_amount) + Number(paymentData.amount / 100); // Paystack amounts are in kobo
-        await Users.update(
+        const updateDUser = await Users.update(
           { wallet_amount: newAmount },
           { where: { email: paymentData.customer.email } }
         );
+        console.log(updateDUser);
       }
 
       return res.status(200).json({ success: true });
