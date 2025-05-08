@@ -367,6 +367,7 @@ exports.startWalletPayment = async (req, res, next) => {
       .digest("hex");
 
     if (hash !== req.headers["x-paystack-signature"]) {
+      console.log("Invalid signature");
       return res.status(401).send("Unauthorized");
     }
 
