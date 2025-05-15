@@ -177,7 +177,7 @@ const Parcels = sequelize.define(
     },
     state: {
       type: Sequelize.STRING(100),
-      allowNull: true,
+      allowNull: false,
     },
     landmark: {
       type: Sequelize.STRING(100),
@@ -189,7 +189,7 @@ const Parcels = sequelize.define(
     },
     receiver_state: {
       type: Sequelize.STRING(100),
-      allowNull: true,
+      allowNull: false,
     },
     conversion_status: {
       type: Sequelize.STRING(50),
