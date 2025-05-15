@@ -113,7 +113,7 @@ const Parcels = sequelize.define(
         "Economy",
         "next_day_terminal",
         "next_day_doorstep",
-        "economy_terminal
+        "economy_terminal"
       ),
       allowNull: false,
     },
