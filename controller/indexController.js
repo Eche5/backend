@@ -204,7 +204,8 @@ exports.createPayment = async (req, res) => {
 };
 
 exports.shippingRate = async (req, res) => {
-  const { country, weight } = req.body;
+  const { country, weight, shipping_types } = req.body;
+  console.log(req.body);
   try {
     const zoningQuery = await Zoning.findOne({
       where: { country },
@@ -216,6 +217,9 @@ exports.shippingRate = async (req, res) => {
         where: {
           zone,
           weight_from: { [Op.eq]: weight },
+          shipping_type: {
+            [Op.in]: shipping_types,
+          },
         },
         attributes: ["rate", "shipping_type"],
       });
