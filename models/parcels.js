@@ -40,7 +40,7 @@ const Parcels = sequelize.define(
     },
     postal_code: {
       type: Sequelize.STRING(20),
-      allowNull: false,
+      allowNull: true,
     },
     social_media_handle: {
       type: Sequelize.STRING(100),
@@ -72,7 +72,7 @@ const Parcels = sequelize.define(
     },
     receiver_postal_code: {
       type: Sequelize.STRING(20),
-      allowNull: false,
+      allowNull: true,
     },
     receiver_social_media_handle: {
       type: Sequelize.STRING(100),
@@ -112,7 +112,8 @@ const Parcels = sequelize.define(
         "Express",
         "Economy",
         "next_day_terminal",
-        "next_day_doorstep"
+        "next_day_doorstep",
+        "economy_terminal"
       ),
       allowNull: false,
     },
@@ -177,7 +178,7 @@ const Parcels = sequelize.define(
     },
     state: {
       type: Sequelize.STRING(100),
-      allowNull: true,
+      allowNull: false,
     },
     landmark: {
       type: Sequelize.STRING(100),
@@ -189,7 +190,7 @@ const Parcels = sequelize.define(
     },
     receiver_state: {
       type: Sequelize.STRING(100),
-      allowNull: true,
+      allowNull: false,
     },
     conversion_status: {
       type: Sequelize.STRING(50),
