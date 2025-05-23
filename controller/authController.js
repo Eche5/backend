@@ -14,7 +14,6 @@ exports.createUser = async (req, res) => {
     req.body;
 
   const errors = validationResult(req);
-  console.log(errors.isEmpty());
   if (!errors.isEmpty()) {
     return res.status(401).json({
       success: false,
@@ -251,8 +250,7 @@ exports.verify = async (req, res) => {
         data: { msg: "User already verified" },
       });
     } else {
-      console.log(id);
-      const updatedUser = await Users.update(
+      await Users.update(
         { is_verified: true },
         {
           where: {
@@ -260,7 +258,6 @@ exports.verify = async (req, res) => {
           },
         }
       );
-      console.log(updatedUser);
       const token = jwt.sign({ _id: user[0].id }, jwt_secret, {
         expiresIn: jwt_expires,
       });
@@ -397,7 +394,6 @@ const sendLoginDetails = async (email, first_name, password) => {
 exports.login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    console.log(errors.isEmpty());
     if (!errors.isEmpty()) {
       return res.status(401).json({
         success: false,
@@ -504,8 +500,7 @@ exports.forgotPassword = async (req, res, next) => {
           },
         }
       );
-      console.log(tokenEmail);
-      await sendresetTokenemail(email, resetToken);
+      await sendresetTokenemail(email, resetToken, user);
       return res.status(200).json({
         success: true,
         code: 200,
@@ -593,7 +588,7 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-const sendresetTokenemail = async (email, resetToken) => {
+const sendresetTokenemail = async (email, resetToken, user) => {
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -604,10 +599,9 @@ const sendresetTokenemail = async (email, resetToken) => {
       logoHeight: "30px",
     },
   });
-
   let response = {
     body: {
-      name: email,
+      name: user[0].first_name,
       intro:
         "You recently requested a password reset for your Pickupmanng account.",
       action: {
