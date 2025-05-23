@@ -189,8 +189,7 @@ const sendVerification = async (user) => {
     </table>
   </body>
 </html>
- `; 
-
+ `;
 
   const message = {
     from: process.env.EMAIL,
@@ -619,8 +618,23 @@ const sendresetTokenemail = async (email, resetToken) => {
           link: `https://www.pickupmanng.ng/resetpassword/${resetToken}`,
         },
       },
-      signature: "Best regards",
-      outro: "If you did not request this, you can safely ignore this email.",
+      signature: false,
+      outro: `
+      <p>Yours sincerely,<br /><strong>Pickupman</strong></p><br /></br>
+
+      <p>If you did not request this, you can safely ignore this email.</p><br />
+      <p><strong>PICKUPMAN LOGISTICS</strong><br />
+      Pickupman House<br />
+      Suite BX2, Ground Floor,<br />
+      Zitel Plaza, located beside Chida Hotel Utako<br />
+      Tel: 08146684422<br />
+      Email: support@pickupmanng.ng<br />
+      Website: <a href="http://www.pickupmanng.ng">www.pickupmanng.ng</a></p>
+  
+      <p style="font-size: 12px; color: #888;">
+      <strong>DISCLAIMER:</strong> This is a no-reply email. This message, including any attachments, is intended solely for the designated recipient(s) and may contain confidential or privileged information. Unauthorized use, disclosure, or distribution is prohibited. If you received this in error, please notify the sender immediately and delete it permanently from your system. Note: This inbox is not monitored—for inquiries, contact <a href="mailto:support@pickupmanng.ng">support@pickupmanng.ng</a>.
+      </p>
+    `,
     },
   };
 
