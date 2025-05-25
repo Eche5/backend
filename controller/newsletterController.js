@@ -558,8 +558,8 @@ exports.contactusform = async (req, res) => {
 
   // 3. Define mail options
   const mailOptions = {
-    from: '"Pickupmanng Contact" <Support@Pickupmanng.ng>', // ✅ Must be a verified sender
-    to: process.env.EMAIL, // your admin email
+    from:process.env.EMAIL, // ✅ Must be a verified sender
+    to:  '"Pickupmanng Contact" <Support@pickupmanng.ng>', // your admin email
     subject: `Contact Form-${subject}`,
     html: `
       <h3>Contact Form Submission</h3>
