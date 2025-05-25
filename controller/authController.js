@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const Users = require("../models/users");
 const { Op } = require("sequelize");
+const Newsletter = require("../models/newsLetter");
 
 exports.createUser = async (req, res) => {
   const { email, password, first_name, last_name, phonenumber, role } =
@@ -24,6 +25,16 @@ exports.createUser = async (req, res) => {
   }
 
   try {
+    const existingsubscriber = await Newsletter.findAll({
+      where: {
+        email: email,
+      },
+    });
+    if (existingsubscriber.length === 1) {
+      await Newsletter.destroy({
+        where: { email: email },
+      });
+    }
     const existinguser = await Users.findAll({
       where: {
         email: email,
