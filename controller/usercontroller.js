@@ -211,10 +211,30 @@ exports.getParcelByTrackingNumber = async (req, res) => {
       where: { tracking_number: tracking_number },
       order: [["created_at", "DESC"]],
     });
+
     if (tracking) {
+      const parcel = await Parcels.findOne({
+        where: { tracking_number: tracking_number },
+      });
+  
+      let parcelData = null;
+      if (parcel) {
+        parcelData = {
+          deliveryAddress: `${parcel.receiver_street_address}, ${parcel.receiver_city}, ${parcel.receiver_state}, ${parcel.receiver_region}`,
+          trackingNumber: parcel.tracking_number,
+          status: parcel.status,
+          estimatedDelivery: parcel.estimated_delivery_date,
+          origin: `${parcel.city}, ${parcel.state}, ${parcel.region}`,
+          destination: `${parcel.receiver_city}, ${parcel.receiver_state}, ${parcel.receiver_region}`,
+          service: parcel.selected_deliverymode,
+          weight: `${parcel.parcel_weight} kg`,
+          history: tracking,
+        };
+      }
+
       return res.status(200).json({
         status: true,
-        tracking,
+        tracking: parcelData,
       });
     }
   } catch (error) {
