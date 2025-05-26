@@ -23,6 +23,7 @@
     "mailgen": "^2.0.28",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.4",
+    "node-cron": "^4.0.7",
     "nodemailer": "^6.9.16",
     "package-name": "^0.1.0",
     "passport": "^0.7.0",
