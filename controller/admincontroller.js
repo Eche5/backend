@@ -163,14 +163,16 @@ const sendParcelUpdate = async (emails, first_name, parcel) => {
             Item: "Shipment Weight",
             Detail: parcel.parcel_weight ? parcel.parcel_weight : "N/A",
           },
-          ...(parcel.status !== "Delivered" && [
-            {
-              Item: "Estimated Delivery Date",
-              Detail: parcel.estimated_delivery_date
-                ? parcel.estimated_delivery_date
-                : "N/A",
-            },
-          ]),
+          ...(parcel.status !== "Delivered"
+            ? [
+                {
+                  Item: "Estimated Delivery Date",
+                  Detail: parcel.estimated_delivery_date
+                    ? parcel.estimated_delivery_date
+                    : "N/A",
+                },
+              ]
+            : []),
         ],
       },
       outro: `
