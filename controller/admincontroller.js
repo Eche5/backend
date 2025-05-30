@@ -131,6 +131,68 @@ exports.updateParcel = async (req, res) => {
     return false;
   }
 };
+exports.bulkUpdateParcelStatus = async (req, res) => {
+  try {
+
+    const parcelsToUpdate = req.body.parcels; // Expecting an array of { id, status }
+    if (!Array.isArray(parcelsToUpdate) || parcelsToUpdate.length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid input. Expected an array of parcels with id and status.",
+      });
+    }
+
+    const updateResults = [];
+
+    for (const parcelData of parcelsToUpdate) {
+      const { tracking_number, status } = parcelData;
+
+      // Skip if missing required data
+      if (!tracking_number || !status) continue;
+
+      // Update parcel status
+      const updateResult = await Parcels.update(
+        { status },
+        { where: { tracking_number } }
+      );
+      console.log(updateResult);
+      if (updateResult[0] > 0) {
+        // Create tracking history
+        const parcel = await Parcels.findOne({ where: { tracking_number } });
+
+        await ParcelTracking.create({
+          tracking_number: parcel.tracking_number,
+          status,
+        });
+
+        // Optionally notify users (remove if not needed)
+        await sendParcelUpdate(
+          [parcel.email, parcel.receiver_email],
+          parcel.first_name,
+          parcel
+        );
+
+        await sendWhatsAppMessage(parcel);
+
+        updateResults.push({ tracking_number, status, success: true });
+      } else {
+        updateResults.push({ tracking_number, status, success: false });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      msg: "Bulk update completed",
+      results: updateResults,
+    });
+  } catch (error) {
+    console.error("Bulk update error:", error);
+    return res.status(500).json({
+      success: false,
+      msg: "Internal server error during bulk update",
+    });
+  }
+};
 
 const sendParcelUpdate = async (emails, first_name, parcel) => {
   let MailGenerator = new Mailgen({

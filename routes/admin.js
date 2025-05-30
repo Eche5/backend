@@ -5,7 +5,7 @@ const { super_admin, processing_user } = require("../middleware/role");
 const { auth } = require("../middleware/auth");
 const checkRoles = (roles) => {
   return (req, res, next) => {
-    const userRole = req.user.role; 
+    const userRole = req.user.role;
     if (!roles.includes(userRole)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -33,6 +33,22 @@ router
       ]),
     ],
     controller.updateParcel
+  );
+router
+  .route("/bulk-update-parcels")
+  .patch(
+    [
+      auth,
+      checkRoles([
+        "super_admin",
+        "processing_user",
+        "logistics_user",
+        "customers_rep",
+        "sub_admin",
+        "sub_logistics_admin",
+      ]),
+    ],
+    controller.bulkUpdateParcelStatus
   );
 router
   .route("/getShipment/:tracking_number")
