@@ -159,7 +159,7 @@ const sendVerification = async (user) => {
                 <h2 style="color: #333; font-size: 16px; margin-bottom: 20px;">
                   Pickupmanng Account Verification
                 </h2>
-                <p style="color: #555; font-size: 18px;">Hi <strong>${user?.first_name}</strong>,</p>
+                <p style="color: #555; font-size: 18px;">Dear <strong>${user?.first_name}</strong>,</p>
                 <p style="color: #555; font-size: 16px; margin-bottom: 20px;">
                   Thank you for signing up! Please verify your email address by
                   clicking the button below.

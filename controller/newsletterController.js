@@ -107,7 +107,7 @@ const sendSubscriptionConfirmation = async (subscriber) => {
                           Welcome to Pickupman Newsletter!
                         </h1>
                         <p style="color: #555555; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                          Hello <strong>${
+                          Dear <strong>${
                             subscriber?.first_name || "there"
                           }</strong>,
                         </p>
@@ -397,7 +397,7 @@ const sendUnsubscriptionEmail = async (subscriber) => {
                             You've Been Unsubscribed
                           </h1>
                           <p style="color: #555555; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                            Hello <strong>${
+                            Dear <strong>${
                               subscriber?.first_name || "there"
                             }</strong>,
                           </p>
