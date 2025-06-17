@@ -70,6 +70,10 @@ router
 router
   .route("/registeredUsers")
   .get([auth, super_admin], controller.getAllRegisteredUsers);
+
+router
+  .route("/activity-logs")
+  .get([auth, super_admin], controller.getAllActivityLogs);
 router
   .route("/sendmail")
   .post([auth, super_admin], controller.sendEmailsToUsers);

@@ -21,7 +21,7 @@ const dotenv = require("dotenv").config();
 const app = express();
 app.set("trust proxy", 1);
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

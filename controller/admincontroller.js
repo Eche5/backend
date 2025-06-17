@@ -8,7 +8,7 @@ const ParcelTracking = require("../models/parcelTracking");
 const axios = require("axios");
 const qs = require("qs");
 const Newsletter = require("../models/newsLetter");
-
+const Activitylogs = require("../models/activityLogs");
 exports.getAllTeamMembers = async (req, res) => {
   try {
     const users = await Users.findAll({
@@ -80,6 +80,7 @@ exports.updateParcel = async (req, res) => {
       receiver_landmark,
       conversion_status,
       receiver_state,
+      action,
     } = req.body;
 
     const updateParcel = await Parcels.update(
@@ -114,6 +115,12 @@ exports.updateParcel = async (req, res) => {
           parcel[0].first_name,
           parcel[0]
         );
+        const fullname = `${req.user.first_name} ${req.user.last_name}`;
+        await Activitylogs.create({
+          name: fullname,
+          action: action,
+          parcels: [tracking_number],
+        });
 
         await sendWhatsAppMessage(parcel[0]);
         return res.status(200).json({
@@ -142,7 +149,7 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
     }
 
     const updateResults = [];
-
+    const trackingNumbers = [];
     for (const parcelData of parcelsToUpdate) {
       const { tracking_number, status } = parcelData;
 
@@ -154,7 +161,6 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
         { status },
         { where: { tracking_number } }
       );
-      console.log(updateResult);
       if (updateResult[0] > 0) {
         // Create tracking history
         const parcel = await Parcels.findOne({ where: { tracking_number } });
@@ -163,17 +169,23 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
           tracking_number: parcel.tracking_number,
           status,
         });
-
+        trackingNumbers.push(tracking_number);
         // Optionally notify users (remove if not needed)
         await sendParcelUpdate(
           [parcel.email, parcel.receiver_email],
           parcel.first_name,
           parcel
         );
-
+        const fullname = `${req.user.first_name} ${req.user.last_name}`;
+        await Activitylogs.create({
+          name: fullname,
+          action: "updated shipment",
+          parcels: trackingNumbers,
+        });
         await sendWhatsAppMessage(parcel);
 
         updateResults.push({ tracking_number, status, success: true });
+        console.log(updateResults);
       } else {
         updateResults.push({ tracking_number, status, success: false });
       }
@@ -491,6 +503,33 @@ exports.getAllRegisteredUsers = async (req, res) => {
       users,
       status: "success",
       msg: `fetched team members`,
+    });
+  }
+};
+
+exports.getAllActivityLogs = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const offset = (page - 1) * pageSize;
+  const logs = await Activitylogs.findAll({
+    order: [["created_at", "DESC"]],
+    offset: offset,
+    limit: 10,
+  });
+
+  const totalItems = await Activitylogs.count();
+  if (!logs) {
+    return res.status(500).json({ success: false, message: "Database error" });
+  } else {
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      logs,
+      totalPages: Math.ceil(totalItems / pageSize),
+      currentPage: page,
+      totalItems,
+      status: "success",
+      msg: `fetched all payments`,
     });
   }
 };

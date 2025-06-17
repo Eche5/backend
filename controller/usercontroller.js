@@ -211,12 +211,20 @@ exports.getParcelByTrackingNumber = async (req, res) => {
       where: { tracking_number: tracking_number },
       order: [["created_at", "DESC"]],
     });
-
     if (tracking) {
       const parcel = await Parcels.findOne({
         where: { tracking_number: tracking_number },
       });
-  
+      const randomId = Math.floor(Math.random() * 90000) + 10000;
+
+      const created_Shipment = {
+        id: randomId,
+        tracking_number: tracking_number,
+        status: "Shipment Created",
+        createdAt: parcel.createdAt,
+        updatedAt: parcel.updatedAt,
+      };
+      tracking.push(created_Shipment);
       let parcelData = null;
       if (parcel) {
         parcelData = {
