@@ -150,6 +150,8 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
 
     const updateResults = [];
     const trackingNumbers = [];
+    const fullname = `${req.user.first_name} ${req.user.last_name}`;
+
     for (const parcelData of parcelsToUpdate) {
       const { tracking_number, status } = parcelData;
 
@@ -171,18 +173,13 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
         });
         trackingNumbers.push(tracking_number);
         // Optionally notify users (remove if not needed)
-        await sendParcelUpdate(
-          [parcel.email, parcel.receiver_email],
-          parcel.first_name,
-          parcel
-        );
-        const fullname = `${req.user.first_name} ${req.user.last_name}`;
-        await Activitylogs.create({
-          name: fullname,
-          action: "updated shipment",
-          parcels: trackingNumbers,
-        });
-        await sendWhatsAppMessage(parcel);
+        // await sendParcelUpdate(
+        //   [parcel.email, parcel.receiver_email],
+        //   parcel.first_name,
+        //   parcel
+        // );
+
+        // await sendWhatsAppMessage(parcel);
 
         updateResults.push({ tracking_number, status, success: true });
         console.log(updateResults);
@@ -190,7 +187,11 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
         updateResults.push({ tracking_number, status, success: false });
       }
     }
-
+    await Activitylogs.create({
+      name: fullname,
+      action: "updated shipment",
+      parcels: trackingNumbers,
+    });
     return res.status(200).json({
       success: true,
       msg: "Bulk update completed",
