@@ -109,6 +109,9 @@ exports.GetUserParcel = async (req, res) => {
       offset: offset,
       limit: 10,
     });
+    const Deliveredparcels = await Parcels.count({
+      where: { sender_id: id, payment_status: "paid", status: "Delivered" },
+    });
 
     const totalItems = await Parcels.count({
       where: { sender_id: id, payment_status: "paid" },
@@ -117,6 +120,7 @@ exports.GetUserParcel = async (req, res) => {
       return res.status(500).json({ success: false, message: parcels });
     } else {
       return res.status(200).json({
+        Deliveredparcels,
         success: true,
         totalItems,
         totalPages: Math.ceil(totalItems / pageSize),
