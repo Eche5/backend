@@ -31,6 +31,11 @@ const Users = sequelize.define(
       type: Sequelize.STRING(20),
       allowNull: true,
     },
+    feedback: {
+      type: Sequelize.ENUM("remind later", "rejected", "sent"),
+      allowNull: true,
+      defaultValue: "remind later",
+    },
     role: {
       type: Sequelize.ENUM(
         "super_admin",
@@ -68,10 +73,7 @@ const Users = sequelize.define(
       type: Sequelize.STRING(20),
       allowNull: true,
     },
-    phone_number: {
-      type: Sequelize.STRING(20),
-      allowNull: true,
-    },
+
     landmark: {
       type: Sequelize.TEXT,
       allowNull: true,
