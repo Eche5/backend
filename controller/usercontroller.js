@@ -173,7 +173,7 @@ exports.changeFeedback = async (req, res) => {
 exports.sendFeedback = async (req, res) => {
   const {
     email: customerEmail,
-    phoneNumber,
+    PhoneNumber,
     overallSatisfaction,
     deliveredOnTime,
     delayDuration,
@@ -190,7 +190,7 @@ exports.sendFeedback = async (req, res) => {
     npsScore,
     openFeedback,
   } = req.body;
-
+  console.log("Received feedback data:", req.body);
   const submittedAt = new Date().toLocaleString("en-US", {});
   const emailContent = `
 <!DOCTYPE html>
@@ -317,8 +317,8 @@ exports.sendFeedback = async (req, res) => {
                 : ""
             }
              ${
-               phoneNumber
-                 ? `📧 <strong>Customer phone number:</strong> ${phoneNumber}<br>`
+               PhoneNumber
+                 ? `📧 <strong>Customer phone number:</strong> ${PhoneNumber}<br>`
                  : ""
              }
         </div>
@@ -609,7 +609,6 @@ exports.sendFeedback = async (req, res) => {
   });
   try {
     const info = await transporter.sendMail(message);
-    await Users.update({ feedback: "sent" }, { where: { id: req.user.id } });
 
     console.log("feedback successfully sent:", info.accepted[0]);
     return res.status(200).json({
