@@ -172,6 +172,8 @@ exports.changeFeedback = async (req, res) => {
 
 exports.sendFeedback = async (req, res) => {
   const {
+    email: customerEmail,
+    phoneNumber,
     overallSatisfaction,
     deliveredOnTime,
     delayDuration,
@@ -189,7 +191,6 @@ exports.sendFeedback = async (req, res) => {
     openFeedback,
   } = req.body;
 
-  const customerEmail = req.user.email;
   const submittedAt = new Date().toLocaleString("en-US", {});
   const emailContent = `
 <!DOCTYPE html>
@@ -315,6 +316,11 @@ exports.sendFeedback = async (req, res) => {
                 ? `📧 <strong>Customer Email:</strong> ${customerEmail}<br>`
                 : ""
             }
+             ${
+               phoneNumber
+                 ? `📧 <strong>Customer phone number:</strong> ${phoneNumber}<br>`
+                 : ""
+             }
         </div>
 
         <div class="section">
