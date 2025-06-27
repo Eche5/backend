@@ -7,8 +7,8 @@ router.route("/parcel").get([auth], controller.GetUserParcel);
 router.route("/userdata").get([auth], controller.getUserDetails);
 router.route("/updateme").patch([auth], controller.updateUsersDetails);
 router.route("/feedback").post(controller.sendFeedback);
-router.route("/feedback").put([auth], controller.changeFeedback);
-router.route("/consent").post([auth], controller.customerconsent);
+router.route("/feedback").put(controller.changeFeedback);
+router.route("/consent").post(controller.customerconsent);
 
 router
   .route("/getShipment/:tracking_number")
