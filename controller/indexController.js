@@ -115,7 +115,6 @@ exports.GetAllStandardParcels = async (req, res) => {
   }
 };
 
-
 exports.GetAllNextDayParcels = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.pageSize) || 10;
@@ -174,6 +173,42 @@ exports.GetAllEconomyParcels = async (req, res) => {
       payment_status: "paid",
       selected_Deliverymode: {
         [Op.in]: ["economy_terminal", "Economy"],
+      },
+    },
+  });
+  if (!parcels) {
+    return res.status(500).json({ success: false, message: "Database error" });
+  } else {
+    return res.status(200).json({
+      status: true,
+      parcels,
+      totalItems,
+      totalPages: Math.ceil(totalItems / pageSize),
+      currentPage: page,
+    });
+  }
+};
+exports.GetAllExpressParcels = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const offset = (page - 1) * pageSize;
+  const parcels = await Parcels.findAll({
+    where: {
+      payment_status: "paid",
+      selected_Deliverymode: {
+        [Op.in]: ["Express"],
+      },
+    },
+    order: [["created_at", "DESC"]],
+    offset: offset,
+    limit: 10,
+  });
+
+  const totalItems = await Parcels.count({
+    where: {
+      payment_status: "paid",
+      selected_Deliverymode: {
+        [Op.in]: ["Express"],
       },
     },
   });
