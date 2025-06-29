@@ -369,8 +369,8 @@ const sendParcelUpdate = async (parcel) => {
               <table width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td>
-                    <a href="https://www.pickupmanng.ng" style="color: #FFF; text-decoration: underline; font-size: 12px; margin-right: 15px;">Privacy</a>
-                    <a href="https://www.pickupmanng.ng" style="color: #FFF; text-decoration: underline; font-size: 12px;">Terms</a>
+                    <a href="https://www.pickupmanng.ng/privacy-and-policy" style="color: #FFF; text-decoration: underline; font-size: 12px; margin-right: 15px;">Privacy</a>
+                    <a href="https://www.pickupmanng.ng/terms-and-conditions" style="color: #FFF; text-decoration: underline; font-size: 12px;">Terms</a>
                   </td>
                   <td style="text-align: right;">
                     <a href="https://www.facebook.com/share/1BjffnLhMF/?mibextid=wwXIfr" target="_blank" style="display: inline-block; margin-left: 10px;">
@@ -644,8 +644,8 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
           <table width="100%" cellspacing="0" cellpadding="0" border="0">
             <tr>
               <td>
-                <a href="https://www.pickupmanng.ng" style="color: #FFF; text-decoration: underline; font-size: 12px; margin-right: 15px;">Privacy</a>
-                <a href="https://www.pickupmanng.ng" style="color: #FFF; text-decoration: underline; font-size: 12px;">Terms</a>
+                <a href="https://www.pickupmanng.ng/privacy-and-policy" style="color: #FFF; text-decoration: underline; font-size: 12px; margin-right: 15px;">Privacy</a>
+                <a href="https://www.pickupmanng.ng/terms-and-conditions" style="color: #FFF; text-decoration: underline; font-size: 12px;">Terms</a>
               </td>
               <td style="text-align: right;">
                 <a href="https://www.facebook.com/share/1BjffnLhMF/?mibextid=wwXIfr" target="_blank" style="display: inline-block; margin-left: 10px;">

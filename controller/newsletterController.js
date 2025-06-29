@@ -244,8 +244,8 @@ const sendSubscriptionConfirmation = async (subscriber) => {
                           © ${new Date().getFullYear()} Pickupmanng. All rights reserved.
                         </p>
                         <p style="margin: 0; color: #aaaaaa; font-size: 13px;">
-                          <a href="https://www.pickupmanng.ng/privacy" style="color: #aaaaaa; text-decoration: underline;">Privacy Policy</a> | 
-                          <a href="https://www.pickupmanng.ng/terms" style="color: #aaaaaa; text-decoration: underline;">Terms of Service</a> | 
+                          <a href="https://www.pickupmanng.ng/privacy-and-policy" style="color: #aaaaaa; text-decoration: underline;">Privacy Policy</a> | 
+                          <a href="https://www.pickupmanng.ng/terms-and-conditions" style="color: #aaaaaa; text-decoration: underline;">Terms of Service</a> | 
                           <a href="https://www.pickupmanng.ng/unsubscribe?email=${
                             subscriber?.email || ""
                           }" style="color: #aaaaaa; text-decoration: underline;">Unsubscribe</a>
@@ -481,8 +481,8 @@ const sendUnsubscriptionEmail = async (subscriber) => {
                             © ${new Date().getFullYear()} Pickupmanng. All rights reserved.
                           </p>
                           <p style="margin: 0; color: #aaaaaa; font-size: 13px;">
-                            <a href="https://www.pickupmanng.ng/privacy" style="color: #aaaaaa; text-decoration: underline;">Privacy Policy</a> | 
-                            <a href="https://www.pickupmanng.ng/terms" style="color: #aaaaaa; text-decoration: underline;">Terms of Service</a> | 
+                            <a href="https://www.pickupmanng.ng/privacy-and-policy" style="color: #aaaaaa; text-decoration: underline;">Privacy Policy</a> | 
+                            <a href="https://www.pickupmanng.ng/terms-and-conditions" style="color: #aaaaaa; text-decoration: underline;">Terms of Service</a> | 
                             <a href="mailto:Support@Pickupmanng.ng" style="color: #aaaaaa; text-decoration: underline;">Contact Us</a>
                           </p>
                         </td>
