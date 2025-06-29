@@ -649,17 +649,6 @@ const sendresetTokenemail = async (email, resetToken, user) => {
     </p>
     </div>
     
-    ${
-      user.subscribed
-        ? `
-    <p style="font-size: 14px; color: #666;">
-      If you no longer wish to receive these emails, you can unsubscribe 
-      <a href="https://pickupman.ng/unsubscribe?email=${user.email}" style="color: #4F46E5; text-decoration: underline;">here</a>.
-    </p>
-    `
-        : ""
-    }
-    
     <p style="margin-bottom: 0;">Yours sincerely,<br /><strong>Pickupman</strong></p>
   </div>
 
