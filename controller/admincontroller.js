@@ -229,7 +229,7 @@ const sendParcelUpdate = async (parcel) => {
   for (const recipient of recipients) {
     const emailHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-      <div style="background-color: #012152; padding: 5px 10px; text-align: center; border-radius: 4px 4px 0 0;">
+      <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td style="text-align: center;">
@@ -561,7 +561,7 @@ const sendEmails = async (users, message, subject) => {
   for (let user of users) {
     const emailHtml = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-     <div style="background-color: #012152; padding: 5px 10px; text-align: center; border-radius: 4px 4px 0 0;">
+     <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
     <tr>
       <td style="text-align: center;">
@@ -591,7 +591,7 @@ const sendEmails = async (users, message, subject) => {
         ? `
     <p style="font-size: 14px; color: #666;">
       If you no longer wish to receive these emails, you can unsubscribe 
-      <a href="https://pickupmanng.ng/unsubscribe?email=${user.email}" style="color: #4F46E5; text-decoration: underline;">here</a>.
+      <a href="https://www.pickupmanng.ng/unsubscribe?email=${user.email}" style="color: #4F46E5; text-decoration: underline;">here</a>.
     </p>
     `
         : ""

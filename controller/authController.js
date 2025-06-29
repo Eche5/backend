@@ -101,7 +101,7 @@ const sendVerification = async (user) => {
   let subject = "Verify your email - Pickupmanng";
   const emailHtml = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-    <div style="background-color: #012152; padding: 5px 10px; text-align: center; border-radius: 4px 4px 0 0;">
+    <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td style="text-align: center; padding: 5px 0;">
@@ -616,7 +616,7 @@ const sendresetTokenemail = async (email, resetToken, user) => {
   let subject = "Password Reset Request - Pickupmanng";
   const emailHtml = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-    <div style="background-color: #012152; padding: 5px 10px; text-align: center; border-radius: 4px 4px 0 0;">
+    <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td style="text-align: center; padding: 5px 0;">
