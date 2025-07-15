@@ -9,9 +9,8 @@ router.route("/standard/shipment").get(controller.GetAllStandardParcels);
 router.route("/next-day-shipments").get(controller.GetAllNextDayParcels);
 router.route("/economy-shipments").get(controller.GetAllEconomyParcels);
 router.route("/express-shipments").get(controller.GetAllExpressParcels);
-
+router.route("/delete-shipment").delete(controller.deletedShipment);
 router.route("/savers-shipments").get(controller.GetAllSaversParcels);
-
 
 router.route("/parcel/user").get([auth], controller.GetUserParcel);
 router

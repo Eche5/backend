@@ -888,3 +888,22 @@ async function sendWhatsAppMessage(parcelData) {
     throw error;
   }
 }
+exports.deletedShipment = async (req, res) => {
+  const { id } = req.body;
+  const parcel = await Parcels.destroy({
+    where: {
+      id: id,
+    },
+  });
+  if (!parcel) {
+    return res.status(404).json({
+      status: false,
+      msg: "error deleting shipment",
+    });
+  } else {
+    res.status(204).json({
+      status: true,
+      msg: "Shipment deleted successfully",
+    });
+  }
+};
