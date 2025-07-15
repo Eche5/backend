@@ -333,8 +333,12 @@ exports.createPayment = async (req, res) => {
         req.user.email,
         req.user.first_name,
         response.tracking_number,
-        parcel[0]?.state
+        parcel[0]?.state,
+        parcel[0]?.item_name,
+        parcel[0]?.quantity,
+        parcel[0]?.quantity
       );
+
       await sendWhatsAppMessage(parcel[0]);
 
       return res.status(201).json({
