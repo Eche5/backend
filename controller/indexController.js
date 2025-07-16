@@ -91,7 +91,7 @@ exports.GetAllStandardParcels = async (req, res) => {
     },
     order: [["created_at", "DESC"]],
     offset: offset,
-    limit: 10,
+    limit: pageSize,
   });
 
   const totalItems = await Parcels.count({
@@ -128,7 +128,7 @@ exports.GetAllNextDayParcels = async (req, res) => {
     },
     order: [["created_at", "DESC"]],
     offset: offset,
-    limit: 10,
+    limit: pageSize,
   });
 
   const totalItems = await Parcels.count({
@@ -165,7 +165,7 @@ exports.GetAllEconomyParcels = async (req, res) => {
     },
     order: [["created_at", "DESC"]],
     offset: offset,
-    limit: 10,
+    limit: pageSize,
   });
 
   const totalItems = await Parcels.count({
@@ -201,7 +201,7 @@ exports.GetAllExpressParcels = async (req, res) => {
     },
     order: [["created_at", "DESC"]],
     offset: offset,
-    limit: 10,
+    limit: pageSize,
   });
 
   const totalItems = await Parcels.count({
@@ -228,6 +228,7 @@ exports.GetAllSaversParcels = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.pageSize) || 10;
   const offset = (page - 1) * pageSize;
+  console.log(page, pageSize);
   const parcels = await Parcels.findAll({
     where: {
       payment_status: "paid",
@@ -237,7 +238,7 @@ exports.GetAllSaversParcels = async (req, res) => {
     },
     order: [["created_at", "DESC"]],
     offset: offset,
-    limit: 10,
+    limit: pageSize,
   });
 
   const totalItems = await Parcels.count({
