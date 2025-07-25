@@ -632,7 +632,7 @@ exports.payThroughWallet = async (req, res) => {
     if (user) {
       const balance = Number(user[0].wallet_amount);
 
-      if (balance < shipping_fee && useremail !== "davidese403@gmail.com") {
+      if (balance < Number(shipping_fee) && useremail.trim().toLowerCase() !== "davidese403@gmail.com") {
         return res.status(500).json({
           success: false,
           message: "insufficient funds, please top up",
