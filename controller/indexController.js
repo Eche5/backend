@@ -419,7 +419,7 @@ exports.localshippingrate = async (req, res) => {
 
     const additionalData = {
       shipping_type: "standard",
-      rate: "8700.00",
+      rate: "7500.00",
       duration:
         "4-5 business days after the drop-off day (weekends and public holidays not included)",
     };
