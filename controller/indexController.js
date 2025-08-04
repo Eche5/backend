@@ -311,6 +311,7 @@ exports.startPayment = async (req, res, next) => {
 exports.createPayment = async (req, res) => {
   try {
     const response = await paymentInstance.createPayment(req.query);
+    console.log(response);
     const newStatus = response?.status === "success" ? "Paid" : "Failed";
     const parcel = await Parcels.findAll({
       where: { tracking_number: response.tracking_number },
@@ -334,12 +335,11 @@ exports.createPayment = async (req, res) => {
         req.user.email,
         req.user.first_name,
         response.tracking_number,
-        parcel[0]?.state,
-        parcel[0]?.item_name,
-        parcel[0]?.quantity,
-        parcel[0]?.quantity
+        updatedParcel.state,
+        updatedParcel.item_name,
+        updatedParcel.quantity,
+        updatedParcel.parcel_weight
       );
-
       await sendWhatsAppMessage(parcel[0]);
 
       return res.status(201).json({
@@ -632,7 +632,10 @@ exports.payThroughWallet = async (req, res) => {
     if (user) {
       const balance = Number(user[0].wallet_amount);
 
-      if (balance < Number(shipping_fee) && useremail.trim().toLowerCase() !== "davidese403@gmail.com") {
+      if (
+        balance < Number(shipping_fee) &&
+        useremail.trim().toLowerCase() !== "davidese403@gmail.com"
+      ) {
         return res.status(500).json({
           success: false,
           message: "insufficient funds, please top up",

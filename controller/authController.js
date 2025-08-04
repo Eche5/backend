@@ -563,7 +563,7 @@ exports.resetPassword = async (req, res, next) => {
         },
       },
     });
-
+    console.log(user, resetToken);
     if (!user || user.length === 0) {
       return res.status(400).json({
         success: false,
@@ -638,7 +638,7 @@ const sendresetTokenemail = async (email, resetToken, user) => {
 <p>You recently requested a password reset for your Pickupmanng account. Click the button below to reset your password:</p>
     
     <div style="text-align: center; margin: 25px 0;">
-      <a href="https://www.pickupmanng.ng/auth/reset-password/${resetToken}" 
+      <a href="https://www.pickupmanng.ng/auth/reset-password?token=${resetToken}" 
          style="background-color: #012152; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; transition: background-color 0.3s;">
         Reset Password
       </a>
