@@ -31,6 +31,81 @@ const Users = sequelize.define(
       type: Sequelize.STRING(20),
       allowNull: true,
     },
+    alternate_phone: {
+      type: Sequelize.STRING(20),
+      allowNull: true,
+    },
+    // New field: National ID Number
+    nin: {
+      type: Sequelize.STRING(255),
+      allowNull: true,
+    },
+    // New field: Birth Date
+    birth_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+    },
+    // New field: Marital Status
+    marital_status: {
+      type: Sequelize.ENUM("single", "married", "divorced", "widowed"),
+      allowNull: true,
+    },
+    // New field: Health Issues
+    health_issues: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
+    // New fields: Spouse Information
+    spouse_name: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
+    spouse_employer: {
+      type: Sequelize.STRING(200),
+      allowNull: true,
+    },
+    spouse_workplace: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
+    // New fields: Next of Kin Information
+    next_of_kin_name: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
+    bank_name: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
+    bank_account_name: {
+      type: Sequelize.STRING(100),
+      allowNull: true,
+    },
+    bank_account_number: {
+      type: Sequelize.STRING(30),
+      allowNull: true,
+    },
+
+    next_of_kin_address: { type: Sequelize.TEXT, allowNull: true },
+    next_of_kin_relationship: {
+      type: Sequelize.ENUM(
+        "parent",
+        "sibling",
+        "child",
+        "spouse",
+        "friend",
+        "other"
+      ),
+      allowNull: true,
+    },
+    next_of_kin_phone: {
+      type: Sequelize.STRING(20),
+      allowNull: true,
+    },
+    next_of_kin_email: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
     feedback: {
       type: Sequelize.ENUM("remind later", "rejected", "sent"),
       allowNull: true,

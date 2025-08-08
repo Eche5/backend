@@ -10,6 +10,57 @@ const qs = require("qs");
 const Newsletter = require("../models/newsLetter");
 const Activitylogs = require("../models/activityLogs");
 const { email } = require("../middleware/validation");
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters!
+const crypto = require("crypto");
+
+function decrypt(encryptedText) {
+  const [ivHex, encrypted] = encryptedText.split(":");
+  const iv = Buffer.from(ivHex, "hex");
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+exports.changeStaffRole = async (req, res, next) => {
+  const { id, role } = req.body;
+  try {
+    const user = await Users.findAll({ where: { id: id } });
+    if (!user) {
+      return res.status(422).json({
+        success: false,
+        code: 422,
+        status: "error",
+        data: { msg: "user does not exist" },
+      });
+    } else {
+      await Users.update(
+        {
+          role: role,
+        },
+        {
+          where: {
+            id: id,
+          },
+        }
+      );
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        status: "success",
+        data: {
+          msg: "staff role now changed successfully",
+        },
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 exports.getAllTeamMembers = async (req, res) => {
   try {
     const users = await Users.findAll({
@@ -24,10 +75,17 @@ exports.getAllTeamMembers = async (req, res) => {
         .status(500)
         .json({ success: false, message: "something went wrong" });
     } else {
+      const decryptedUsers = users?.map((user) => {
+        const decryptedNIN = user?.nin ? decrypt(user.nin) : null;
+        return {
+          ...user.toJSON(), // convert Sequelize model to plain object
+          nin: decryptedNIN, // overwrite with decrypted version
+        };
+      });
       return res.status(200).json({
         success: true,
         code: 200,
-        users,
+        users: decryptedUsers,
         status: "success",
         msg: `fetched team members`,
       });

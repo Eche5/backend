@@ -14,6 +14,10 @@ const checkRoles = (roles) => {
 };
 
 router.route("/team").get([auth, super_admin], controller.getAllTeamMembers);
+router
+  .route("/update-role")
+  .put([auth, super_admin], controller.changeStaffRole);
+
 router.route("/payments").get([auth, super_admin], controller.getAllPayments);
 router
   .route("/deleteuser")

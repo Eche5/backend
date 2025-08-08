@@ -432,6 +432,7 @@ exports.login = async (req, res, next) => {
         email: email,
       },
     });
+    console.log(user);
     const match = await bcrypt.compare(password, user[0]?.password);
 
     if (!match) {
@@ -477,6 +478,7 @@ exports.login = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -510,6 +512,7 @@ exports.forgotPassword = async (req, res, next) => {
         email: email,
       },
     });
+    console.log(user);
     if (user) {
       const resetToken = crypto.randomBytes(32).toString("hex");
       const resetTokenExpires = Date.now() + 3600000;
@@ -535,9 +538,11 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
+
 
 exports.resetPassword = async (req, res, next) => {
   try {

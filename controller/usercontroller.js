@@ -2,7 +2,10 @@ const Parcels = require("../models/parcels");
 const Users = require("../models/users");
 const parcelTracking = require("../models/parcelTracking");
 const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters!
+const IV_LENGTH = 16; // AES block size
 exports.createshipment = async (req, res) => {
   const sender_id = req.user.id;
 
@@ -133,7 +136,18 @@ exports.GetUserParcel = async (req, res) => {
     return res.status(500).json({ success: false, message: error });
   }
 };
-
+function decrypt(encryptedText) {
+  const [ivHex, encrypted] = encryptedText.split(":");
+  const iv = Buffer.from(ivHex, "hex");
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
 exports.getUserDetails = async (req, res) => {
   const id = req.user.id;
   const user = await Users.findAll({
@@ -141,8 +155,12 @@ exports.getUserDetails = async (req, res) => {
       id: id,
     },
   });
+
   if (user) {
+    const decryptedNIN = user[0].nin ? decrypt(user[0].nin) : null;
+
     const userData = user[0];
+    userData["nin"] = decryptedNIN;
     return res.status(200).json({
       status: true,
       userData,
@@ -777,6 +795,18 @@ exports.customerconsent = async (req, res) => {
   }
 };
 
+// Encrypt a string (e.g., NIN)
+function encrypt(text) {
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(
+    "aes-256-cbc",
+    Buffer.from(ENCRYPTION_KEY),
+    iv
+  );
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
+}
 exports.updateUsersDetails = async (req, res) => {
   const {
     first_name,
@@ -788,7 +818,21 @@ exports.updateUsersDetails = async (req, res) => {
     state,
     postal_code,
     phone_number,
+    alternate_phone,
+    nin, // Store the full NIN in database
+    birth_date,
+    marital_status,
+    health_issues,
+    spouse_name,
+    spouse_employer,
+    spouse_workplace,
+    next_of_kin_name,
+    next_of_kin_relationship,
+    next_of_kin_phone,
+    next_of_kin_email,
+    next_of_kin_address,
   } = req.body;
+  console.log(req.body);
   const id = req.user.id;
 
   if (!id) {
@@ -797,6 +841,7 @@ exports.updateUsersDetails = async (req, res) => {
       message: "user does not exist",
     });
   }
+  const encryptedNIN = nin ? encrypt(nin) : undefined;
 
   try {
     const user = await Users.findAll({ where: { id: id } });
@@ -817,6 +862,19 @@ exports.updateUsersDetails = async (req, res) => {
           state,
           postal_code,
           phone_number,
+          alternate_phone,
+          nin: encryptedNIN, // Store the full NIN in database
+          birth_date,
+          marital_status,
+          health_issues,
+          spouse_name,
+          spouse_employer,
+          spouse_workplace,
+          next_of_kin_name,
+          next_of_kin_relationship,
+          next_of_kin_phone,
+          next_of_kin_email,
+          next_of_kin_address,
         },
         { where: { id: id } }
       );
@@ -828,6 +886,7 @@ exports.updateUsersDetails = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Failed to update user data",
