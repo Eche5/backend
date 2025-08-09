@@ -817,7 +817,7 @@ exports.updateUsersDetails = async (req, res) => {
     country,
     state,
     postal_code,
-    phone_number,
+    phonenumber,
     alternate_phone,
     nin, // Store the full NIN in database
     birth_date,
@@ -828,11 +828,14 @@ exports.updateUsersDetails = async (req, res) => {
     spouse_workplace,
     next_of_kin_name,
     next_of_kin_relationship,
+    bank_name,
+    bank_account_number,
+    bank_account_name,
     next_of_kin_phone,
     next_of_kin_email,
     next_of_kin_address,
   } = req.body;
-  console.log(req.body);
+ 
   const id = req.user.id;
 
   if (!id) {
@@ -861,10 +864,13 @@ exports.updateUsersDetails = async (req, res) => {
           country,
           state,
           postal_code,
-          phone_number,
+          phonenumber,
           alternate_phone,
           nin: encryptedNIN, // Store the full NIN in database
           birth_date,
+          bank_name,
+          bank_account_number,
+          bank_account_name,
           marital_status,
           health_issues,
           spouse_name,
