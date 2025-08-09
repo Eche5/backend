@@ -756,7 +756,7 @@ const sendParcelUpdate = async (
       hours: "Offices are open from 9 am to 5 pm.",
       contact: {
         locationName: "PHC",
-        phone: "07062021236",
+        phone: "07055557661",
       },
     },
     {
