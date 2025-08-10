@@ -7,6 +7,8 @@ const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const newsletterRoutes = require("./routes/newsletter");
 const rateLimit = require("express-rate-limit");
+const { createClient } = require("@supabase/supabase-js");
+
 const cron = require("node-cron");
 const {
   getBookedShipmentCount,
@@ -65,6 +67,30 @@ cron.schedule("*/5 * * * *", async () => {
     console.log(`Updated booked shipment count: ${count}`);
   } catch (error) {
     console.error("Failed to update shipment count:", error);
+  }
+});
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+// Run every 6 hours — adjust as needed
+cron.schedule("0 0 * * *", async () => {
+  console.log(
+    "⏰ Running Supabase keep-alive job at",
+    new Date().toISOString()
+  );
+
+  try {
+    const { data, error } = await supabase.storage
+      .from("pickupmanimage") // bucket name
+      .list("", { limit: 1 }); // just fetch 1 file
+    if (error) throw error;
+
+    console.log("✅ Supabase ping successful", data);
+  } catch (err) {
+    console.error("❌ Supabase ping failed:", err.message);
   }
 });
 

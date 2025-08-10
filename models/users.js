@@ -31,6 +31,10 @@ const Users = sequelize.define(
       type: Sequelize.STRING(20),
       allowNull: true,
     },
+    profile_picture: {
+      type: Sequelize.STRING(255),
+      allowNull: true,
+    },
     alternate_phone: {
       type: Sequelize.STRING(20),
       allowNull: true,
