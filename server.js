@@ -12,7 +12,7 @@ const Payments = require("./models/payments");
 dotenv.config({ path: ".env" });
 
 sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     console.log("Database synced");
   })
