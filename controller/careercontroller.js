@@ -151,7 +151,13 @@ exports.getUserJobsOpenings = async (req, res) => {
     console.log("query", department);
     const whereClause = {
       status: {
-        [Op.notIn]: ["draft", "archived"], // exclude these statuses
+        [Op.notIn]: [
+          "draft",
+          "archived",
+          "on hold",
+          "archived",
+          "under review",
+        ], // exclude these statuses
       },
     };
 
