@@ -80,5 +80,9 @@ router
   .get([auth, super_admin], controller.getAllActivityLogs);
 router
   .route("/sendmail")
-  .post([auth, super_admin], controller.sendEmailsToUsers);
+  .post(
+    [auth, super_admin],
+    controller.uploadAttachment,
+    controller.sendEmailsToUsers
+  );
 module.exports = router;

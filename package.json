@@ -22,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "mailgen": "^2.0.28",
+    "multer": "^2.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.4",
     "node-cron": "^4.0.7",

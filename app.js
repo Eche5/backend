@@ -5,6 +5,8 @@ const cors = require("cors");
 const indexRoutes = require("./routes/index");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
+const careerRoutes = require("./routes/career");
+
 const newsletterRoutes = require("./routes/newsletter");
 const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
@@ -105,6 +107,7 @@ app.use("/api/v1/counters", (req, res) => {
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1", indexRoutes);
 app.use("/api/v1/newsletter", newsletterRoutes);
+app.use("/api/v1/career", careerRoutes);
 
 app.use("/api/v1/admin", adminRoutes);
 

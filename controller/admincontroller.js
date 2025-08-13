@@ -12,7 +12,9 @@ const Activitylogs = require("../models/activityLogs");
 const { email } = require("../middleware/validation");
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters!
 const crypto = require("crypto");
-
+const multer = require("multer");
+const storage = multer.memoryStorage(); // store in memory for direct email sending
+const upload = multer({ storage });
 function decrypt(encryptedText) {
   const [ivHex, encrypted] = encryptedText.split(":");
   const iv = Buffer.from(ivHex, "hex");
@@ -233,7 +235,6 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
         await sendWhatsAppMessage(parcel);
 
         updateResults.push({ tracking_number, status, success: true });
-        console.log(updateResults);
       } else {
         updateResults.push({ tracking_number, status, success: false });
       }
@@ -566,13 +567,14 @@ exports.deletedTeamMember = async (req, res) => {
     });
   }
 };
+exports.uploadAttachment = upload.array("attachments", 10);
 
 exports.sendEmailsToUsers = async (req, res) => {
-  const { message, subject } = req.body;
+  const { value, subject } = req.body;
   const verifiedUsers = await Users.findAll({
     where: { role: "user", is_verified: true },
   });
-  console.log("test");
+
   const newsLetterUser = await Newsletter.findAll();
   const merged = [
     ...verifiedUsers.map((u) => u.dataValues),
@@ -587,9 +589,9 @@ exports.sendEmailsToUsers = async (req, res) => {
       msg: "Database error",
     });
   } else {
+    const attachments = req.files;
     // const sendResults = await sendEmails(merged, message, subject);
-    const sendResults = await sendEmails(merged, message, subject);
-    console.log(sendResults);
+    const sendResults = await sendEmails(merged, value, subject, attachments);
     if (sendResults) {
       res.status(200).json({
         status: true,
@@ -604,7 +606,7 @@ exports.sendEmailsToUsers = async (req, res) => {
   }
 };
 
-const sendEmails = async (users, message, subject) => {
+const sendEmails = async (users, message, subject, attachments) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.zeptomail.com",
     port: 587,
@@ -740,6 +742,12 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
       subject,
       html: emailHtml,
     };
+    if (attachments && attachments.length > 0) {
+      emailMessage.attachments = attachments.map((file) => ({
+        filename: file.originalname,
+        content: file.buffer,
+      }));
+    }
 
     try {
       const info = await transporter.sendMail(emailMessage);
