@@ -65,7 +65,6 @@ exports.updateJob = async (req, res) => {
       posted,
       status,
     } = req.body;
-    console.log(id);
     const job = await CareerJob.findByPk(id);
 
     if (!job) {
@@ -148,7 +147,6 @@ exports.getAllJobs = async (req, res) => {
 exports.getUserJobsOpenings = async (req, res) => {
   try {
     const { department } = req.params;
-    console.log("query", department);
     const whereClause = {
       status: {
         [Op.notIn]: [
@@ -202,7 +200,6 @@ exports.applyForJob = async (req, res) => {
       linkedIn,
       selectedjob,
     } = req.body;
-    console.log(selectedjob);
     if (!req.file) {
       return res.status(400).json({
         success: false,

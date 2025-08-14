@@ -570,39 +570,41 @@ exports.deletedTeamMember = async (req, res) => {
 exports.uploadAttachment = upload.array("attachments", 10);
 
 exports.sendEmailsToUsers = async (req, res) => {
-  const { value, subject } = req.body;
-  const verifiedUsers = await Users.findAll({
-    where: { role: "user", is_verified: true },
-  });
-
-  const newsLetterUser = await Newsletter.findAll();
-  const merged = [
-    ...verifiedUsers.map((u) => u.dataValues),
-    ...newsLetterUser.map((n) => ({
-      ...n.dataValues,
-      subscribed: true,
-    })),
-  ];
-  if (!verifiedUsers) {
-    return res.status(404).json({
-      status: false,
-      msg: "Database error",
+  try {
+    const { value, subject } = req.body;
+    const verifiedUsers = await Users.findAll({
+      where: { role: "user", is_verified: true },
     });
-  } else {
-    const attachments = req.files;
-    // const sendResults = await sendEmails(merged, message, subject);
-    const sendResults = await sendEmails(merged, value, subject, attachments);
-    if (sendResults) {
-      res.status(200).json({
-        status: true,
-        msg: "Emails sent successfully",
+
+    const newsLetterUser = await Newsletter.findAll();
+    const merged = [
+      ...verifiedUsers.map((u) => u.dataValues),
+      ...newsLetterUser.map((n) => ({
+        ...n.dataValues,
+        subscribed: true,
+      })),
+    ];
+    if (!verifiedUsers) {
+      return res.status(404).json({
+        status: false,
+        msg: "Database error",
       });
     } else {
-      res.status(500).json({
-        status: false,
-        msg: "Failed to send some emails",
+      const attachments = req.files;
+
+      res.status(202).json({ status: true, msg: "Email sending started" });
+
+      setImmediate(() => {
+        sendEmails(merged, value, subject, attachments)
+          .then(() => console.log("Background email sending completed"))
+          .catch((err) => console.error("Error sending emails:", err));
       });
     }
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      msg: "Failed to send some emails",
+    });
   }
 };
 

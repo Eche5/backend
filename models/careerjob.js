@@ -35,7 +35,7 @@ const CareerJob = sequelize.define(
       allowNull: false,
     },
     description: {
-      type: Sequelize.TEXT,
+      type: Sequelize.JSON, // store as array of strings
       allowNull: false,
     },
     requirements: {
