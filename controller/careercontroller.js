@@ -20,6 +20,9 @@ exports.createJob = async (req, res) => {
       requirements,
       posted,
       status,
+      salary,
+      working_days,
+      working_hours,
     } = req.body;
 
     // Ensure requirements is stored as array
@@ -33,6 +36,9 @@ exports.createJob = async (req, res) => {
       requirements, // should be an array from frontend
       posted,
       status,
+      salary,
+      working_days,
+      working_hours,
     });
 
     res.status(201).json({
@@ -64,6 +70,9 @@ exports.updateJob = async (req, res) => {
       requirements,
       posted,
       status,
+      salary,
+      working_days,
+      working_hours,
     } = req.body;
     const job = await CareerJob.findByPk(id);
 
@@ -84,6 +93,9 @@ exports.updateJob = async (req, res) => {
       requirements,
       posted,
       status,
+      salary,
+      working_days,
+      working_hours,
     });
 
     res.status(200).json({
@@ -164,7 +176,6 @@ exports.getUserJobsOpenings = async (req, res) => {
       whereClause.department = department;
     }
 
-    console.log(whereClause);
     const jobs = await CareerJob.findAll({
       where: whereClause,
       order: [["created_at", "DESC"]],
