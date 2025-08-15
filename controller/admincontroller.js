@@ -141,6 +141,10 @@ exports.updateParcel = async (req, res) => {
       receiver_landmark,
       conversion_status,
       receiver_state,
+      fragile,
+      insurance,
+      item_name,
+      package_description,
       action,
     } = req.body;
 
@@ -157,8 +161,12 @@ exports.updateParcel = async (req, res) => {
         receiver_street_address,
         receiver_city,
         receiver_landmark,
+        item_name,
+        package_description,
         conversion_status,
         receiver_state,
+        fragile,
+        insurance,
       },
       { where: { id: id } }
     );
