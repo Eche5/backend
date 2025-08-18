@@ -23,6 +23,7 @@ exports.createJob = async (req, res) => {
       salary,
       working_days,
       working_hours,
+      summary,
     } = req.body;
 
     // Ensure requirements is stored as array
@@ -39,6 +40,7 @@ exports.createJob = async (req, res) => {
       salary,
       working_days,
       working_hours,
+      summary,
     });
 
     res.status(201).json({
@@ -73,6 +75,7 @@ exports.updateJob = async (req, res) => {
       salary,
       working_days,
       working_hours,
+      summary,
     } = req.body;
     const job = await CareerJob.findByPk(id);
 
@@ -96,6 +99,7 @@ exports.updateJob = async (req, res) => {
       salary,
       working_days,
       working_hours,
+      summary,
     });
 
     res.status(200).json({

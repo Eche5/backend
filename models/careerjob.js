@@ -38,6 +38,10 @@ const CareerJob = sequelize.define(
       type: Sequelize.JSON, // store as array of strings
       allowNull: false,
     },
+    summary: {
+      type: Sequelize.TEXT,
+      allowNull: false,
+    },
     working_hours: {
       type: Sequelize.STRING, // e.g., "9 AM - 5 PM"
       allowNull: false,
