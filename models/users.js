@@ -122,6 +122,7 @@ const Users = sequelize.define(
         "sub_logistics_admin",
         "logistics_user",
         "processing_user",
+        "dispatch_rider",
         "customers_rep",
         "user"
       ),

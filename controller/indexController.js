@@ -310,44 +310,59 @@ exports.startPayment = async (req, res, next) => {
 
 exports.createPayment = async (req, res) => {
   try {
-    const response = await paymentInstance.createPayment(req.query);
-    console.log(response);
-    const newStatus = response?.status === "success" ? "Paid" : "Failed";
+    console.log("Webhook received:", req.body);
+    const hash = crypto
+      .createHmac("sha512", process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+    if (hash !== req.headers["x-paystack-signature"]) {
+      return res.status(401).send("Unauthorized");
+    }
+    const event = req.body;
+    let paymentData;
+    if (event.event === "charge.success") {
+      paymentData = event.data;
+    }
+    const newStatus = event.event === "success" ? "Paid" : "Failed";
     const parcel = await Parcels.findAll({
-      where: { tracking_number: response.tracking_number },
+      where: { tracking_number: paymentData.metadata.tracking_number },
     });
+
     if (!parcel) {
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
-    } else {
-      let order = parcel[0];
-
-      order.payment_status = newStatus;
-
-      const updatedParcel = await Parcels.update(
-        {
-          payment_status: order.payment_status,
-        },
-        { where: { tracking_number: response.tracking_number } }
-      );
-      await sendParcelUpdate(
-        req.user.email,
-        req.user.first_name,
-        response.tracking_number,
-        updatedParcel.state,
-        updatedParcel.item_name,
-        updatedParcel.quantity,
-        updatedParcel.parcel_weight
-      );
-      await sendWhatsAppMessage(parcel[0]);
-
-      return res.status(201).json({
-        success: true,
-        status: "Payment Created",
-        data: { payment: response, order, state: updatedParcel[0]?.state },
-      });
     }
+    let order = parcel[0];
+
+    order.payment_status = newStatus;
+
+    const updatedParcel = await Parcels.update(
+      {
+        payment_status: order.payment_status,
+      },
+      { where: { tracking_number: paymentData.metadata.tracking_number } }
+    );
+    await sendParcelUpdate(
+      paymentData.customer.email,
+      paymentData.metadata.full_name,
+      paymentData.metadata.tracking_number,
+      updatedParcel.state,
+      updatedParcel.item_name,
+      updatedParcel.quantity,
+      updatedParcel.parcel_weight
+    );
+    await sendWhatsAppMessage(parcel[0]);
+
+    return res.status(201).json({
+      success: true,
+      status: "Payment Created",
+      data: {
+        payment: paymentData.data,
+        order,
+        state: updatedParcel[0]?.state,
+      },
+    });
   } catch (error) {
     console.error(error);
   }
@@ -634,6 +649,7 @@ exports.payThroughWallet = async (req, res) => {
 
       // Check if user is exempt first
       if (useremail.trim().toLowerCase() === "davidese403@gmail.com") {
+        console.log(useremail);
         // Skip balance check for this user
       } else if (balance < Number(shipping_fee)) {
         return res.status(500).json({
@@ -849,7 +865,6 @@ const sendParcelUpdate = async (
 };
 
 async function sendWhatsAppMessage(parcelData) {
-  console.log(parcelData);
   try {
     const senderParameters = `${parcelData.first_name}, ${parcelData.tracking_number}, confirmed, ${parcelData.parcel_weight}kg, N/A`;
 
@@ -886,7 +901,6 @@ async function sendWhatsAppMessage(parcelData) {
     });
 
     const responses = await Promise.all(promises);
-    console.log(responses);
     return responses.map((response) => response.data);
   } catch (error) {
     throw error;

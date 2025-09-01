@@ -97,6 +97,45 @@ exports.getAllTeamMembers = async (req, res) => {
   }
 };
 
+exports.getAllCustomers = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const offset = (page - 1) * pageSize;
+  try {
+    const users = await Users.findAll({
+      where: {
+        role: "user",
+      },
+      offset: offset,
+      limit: 10,
+    });
+    const totalItems = await Users.count({
+      where: {
+        role: "user",
+      },
+    });
+
+    if (!users) {
+      return res
+        .status(500)
+        .json({ success: false, message: "something went wrong" });
+    } else {
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        users: users,
+        totalPages: Math.ceil(totalItems / pageSize),
+        currentPage: page,
+        totalItems,
+        status: "success",
+        msg: `fetched team members`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 exports.getAllPayments = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.pageSize) || 10;

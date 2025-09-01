@@ -14,6 +14,8 @@ const checkRoles = (roles) => {
 };
 
 router.route("/team").get([auth, super_admin], controller.getAllTeamMembers);
+router.route("/customers").get([auth, super_admin], controller.getAllCustomers);
+
 router
   .route("/update-role")
   .put([auth, super_admin], controller.changeStaffRole);
@@ -34,6 +36,7 @@ router
         "logistics_user",
         "customers_rep",
         "sub_logistics_admin",
+        "dispatch_rider",
       ]),
     ],
     controller.updateParcel
@@ -50,6 +53,7 @@ router
         "customers_rep",
         "sub_admin",
         "sub_logistics_admin",
+        "dispatch_rider",
       ]),
     ],
     controller.bulkUpdateParcelStatus
@@ -66,6 +70,7 @@ router
         "customers_rep",
         "sub_admin",
         "sub_logistics_admin",
+        "dispatch_rider",
       ]),
     ],
     controller.getParcelByTrackingNumber
