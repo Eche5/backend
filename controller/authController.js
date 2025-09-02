@@ -741,7 +741,8 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
 
   const transporter = nodemailer.createTransport({
     host: "smtp.zeptomail.com",
-    port: 587,
+   port: 465,
+  secure: true,
     auth: {
       user: "emailapikey",
       pass: process.env.PASSWORD,
