@@ -339,10 +339,11 @@ exports.createPayment = async (req, res) => {
 
     const updatedParcel = await Parcels.update(
       {
-        payment_status: order.payment_status,
+        payment_status: "Paid",
       },
       { where: { tracking_number: paymentData.metadata.tracking_number } }
     );
+    console.log(updatedParcel);
     await sendParcelUpdate(
       paymentData.customer.email,
       paymentData.metadata.full_name,
