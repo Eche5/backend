@@ -323,7 +323,7 @@ exports.createPayment = async (req, res) => {
     if (event.event === "charge.success") {
       paymentData = event.data;
     }
-    const newStatus = event.event === "success" ? "Paid" : "Failed";
+    const newStatus = paymentData.status === "success" ? "Paid" : "Failed";
     const parcel = await Parcels.findAll({
       where: { tracking_number: paymentData.metadata.tracking_number },
     });
