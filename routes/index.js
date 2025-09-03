@@ -14,9 +14,7 @@ router.route("/savers-shipments").get(controller.GetAllSaversParcels);
 
 router.route("/parcel/user").get([auth], controller.GetUserParcel);
 router.route("/payment/debit-card").post([auth], controller.startPayment);
-router
-  .route("/shipment/webhook")
-  .post(express.raw({ type: "application/json" }), controller.createPayment);
+router.route("/shipment/webhook").post(controller.createPayment);
 router.route("/wallet/funding").post([auth], controller.startWalletFunding);
 router.route("/wallet/webhook").post(controller.startWalletPayment);
 
