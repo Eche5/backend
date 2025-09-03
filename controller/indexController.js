@@ -315,6 +315,7 @@ exports.startPayment = async (req, res, next) => {
 exports.createPayment = async (req, res) => {
   try {
     console.log("Webhook received:", req.body);
+    console.log(process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY);
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY)
       .update(JSON.stringify(req.body))
