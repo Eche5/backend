@@ -316,11 +316,15 @@ exports.createPayment = async (req, res) => {
   try {
     console.log("Webhook received:", req.body);
     console.log(process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY);
+    const signature = req.get("x-paystack-signature");
+
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY)
       .update(JSON.stringify(req.body))
       .digest("hex");
-    if (hash !== req.headers["x-paystack-signature"]) {
+    console.log("hash", hash);
+    console.log("signature", signature);
+    if (hash !== signature) {
       return res.status(401).send("Unauthorized");
     }
     const event = req.body;
