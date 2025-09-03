@@ -15,6 +15,10 @@ const crypto = require("crypto");
 
 const axios = require("axios");
 const qs = require("qs");
+const sendEmail = require("../utils/sendMail");
+const {
+  sendParcelUpdateTemplate,
+} = require("../utils/emails/sendParcelUpdate");
 exports.GetAllParcels = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -343,9 +347,8 @@ exports.createPayment = async (req, res) => {
       },
       { where: { tracking_number: paymentData.metadata.tracking_number } }
     );
-    console.log(updatedParcel);
-    await sendParcelUpdate(
-      paymentData.customer.email,
+
+    const { subject, html } = sendParcelUpdateTemplate(
       paymentData.metadata.full_name,
       paymentData.metadata.tracking_number,
       updatedParcel.state,
@@ -353,6 +356,8 @@ exports.createPayment = async (req, res) => {
       updatedParcel.quantity,
       updatedParcel.parcel_weight
     );
+    await sendEmail({ to: paymentData.customer.email, subject, html });
+
     await sendWhatsAppMessage(parcel[0]);
 
     return res.status(201).json({
@@ -706,15 +711,15 @@ exports.payThroughWallet = async (req, res) => {
           );
         }
 
-        await sendParcelUpdate(
-          req.user.email,
-          req.user.first_name,
-          tracking_number,
-          state,
-          item_name,
-          quantity,
-          parcel_weight
+        const { subject, html } = sendParcelUpdateTemplate(
+          paymentData.metadata.full_name,
+          paymentData.metadata.tracking_number,
+          updatedParcel.state,
+          updatedParcel.item_name,
+          updatedParcel.quantity,
+          updatedParcel.parcel_weight
         );
+        await sendEmail({ to: paymentData.customer.email, subject, html });
         const parcel = {
           first_name,
           receiver_first_name,
@@ -740,128 +745,6 @@ exports.payThroughWallet = async (req, res) => {
       message: "Database error",
       error,
     });
-  }
-};
-
-const sendParcelUpdate = async (
-  email,
-  first_name,
-  tracking_number,
-  state,
-  item_name,
-  quantity,
-  parcel_weight
-) => {
-  const dropOffLocations = [
-    {
-      city: "Yaba",
-      state: "Lagos",
-      address:
-        "Shop A3039, 2nd Floor, Tejuosho Ultra Modern Market, Phase 1, Yaba, Lagos State",
-      note: "Staff are not permitted to leave the office to receive parcels outside.",
-      hours: "Offices are open from 9 am to 5 pm.",
-      contact: {
-        locationName: "Lagos",
-        phone: "08141892503",
-      },
-    },
-    {
-      city: "Port Harcourt",
-      state: "Rivers",
-      address: "HONEYMOON PLAZA, No 14 Rumuola Rd, Rurowolukwo, Port Harcourt",
-      note: "Staff are not permitted to leave the office to receive parcels outside.",
-      hours: "Offices are open from 9 am to 5 pm.",
-      contact: {
-        locationName: "PHC",
-        phone: "07055557661",
-      },
-    },
-    {
-      city: "Abuja",
-      state: "Abuja Federal Capital Territory",
-      address:
-        "Suite BX2, Ground Floor, Zitel Plaza, located beside Chida Hotel Utako",
-      note: "Staff are not permitted to leave the office to receive parcels outside.",
-      hours: "Offices are open from 9 am to 5 pm.",
-      contact: {
-        locationName: "Abuja",
-        phone: "08137167867",
-      },
-    },
-  ];
-
-  const location = dropOffLocations.find((loc) => loc.state === state);
-  const locationDetails = location
-    ? `You can drop off your package at ${location.address}. ${location.note} Offices are open from 9 am to 5 pm. Contact: ${location.contact.locationName} - ${location.contact.phone}`
-    : "Please check with our nearest office for drop-off locations.";
-
-  let MailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "Pickupmanng",
-      link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 pickupmanng. All rights reserved.",
-      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Pickupman%206.png?alt=media&token=acc0ed05-77de-472e-a12a-2eb2d6fbbb9a",
-      logoHeight: "30px",
-    },
-  });
-
-  let response = {
-    body: {
-      name: first_name,
-      intro: `Your shipment with tracking number <strong>${tracking_number}</strong> has been confirmed. Kindly ensure to write the tracking number on your parcel before bringing it to our office. ${locationDetails}`,
-      table: {
-        data: [
-          {
-            "Item Name": item_name,
-            Weight: `${parcel_weight}kg`,
-            Quantity: quantity,
-          },
-        ],
-      },
-      signature: false,
-      outro: `
-      <p>Yours sincerely,<br /><strong>Pickupman</strong></p><br /></br>
-      <p><strong>PICKUPMAN LOGISTICS</strong><br />
-      Pickupman House<br />
-      Suite BX2, Ground Floor,<br />
-      Zitel Plaza, located beside Chida Hotel Utako<br />
-      Tel: 08146684422<br />
-      Email: support@pickupmanng.ng<br />
-      Website: <a href="http://www.pickupmanng.ng">www.pickupmanng.ng</a></p>
-  
-      <p style="font-size: 12px; color: #888;">
-      <strong>DISCLAIMER:</strong> This is a no-reply email. This message, including any attachments, is intended solely for the designated recipient(s) and may contain confidential or privileged information. Unauthorized use, disclosure, or distribution is prohibited. If you received this in error, please notify the sender immediately and delete it permanently from your system. Note: This inbox is not monitored—for inquiries, contact <a href="mailto:support@pickupmanng.ng">support@pickupmanng.ng</a>.
-      </p>
-    `,
-    },
-  };
-
-  let mail = MailGenerator.generate(response);
-
-  let message = {
-    from: process.env.EMAIL,
-    to: email,
-    subject: "Shipment Confirmed",
-    html: mail,
-  };
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.zeptomail.com",
-    port: 587,
-    auth: {
-      user: "emailapikey",
-      pass: process.env.PASSWORD,
-    },
-  });
-
-  try {
-    const info = await transporter.sendMail(message);
-    console.log("Email sent successfully:", info.accepted[0]);
-    return true;
-  } catch (err) {
-    console.error("Error sending email:", err);
-    return false;
   }
 };
 

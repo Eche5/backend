@@ -1,40 +1,41 @@
-const sendVerificationEmail = (user) => {
-  let subject = "Verify your email - Pickupmanng";
+const sendPromotionalEmailsTemplate = (user, message, mailSubject) => {
   const html = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-    <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-      <tr>
-        <td style="text-align: center; padding: 5px 0;">
-          <img src="https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Your_paragraph_text__1_-removebg-preview.png?alt=media&token=3996a1bd-d6cd-4044-b86e-e6d687c11959" 
-               width="120" 
-               style="display: block; margin: 0 auto 8px;" 
-               alt="Pickupman Logo">
-          <h1 style="color: white; font-size: 18px; margin: 0; font-weight: 600; line-height: 1.3;">
-            ${subject}
-          </h1>
-        </td>
-      </tr>
-    </table>
-  </div>
+     <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td style="text-align: center;">
+        <img src="https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/Your_paragraph_text__1_-removebg-preview.png?alt=media&token=3996a1bd-d6cd-4044-b86e-e6d687c11959" 
+             width="150" 
+             style="display: block; margin: 0 auto 15px;" 
+             alt="Pickupman Logo">
+        
+        <h1 style="color: white; font-size: 22px; margin: 0 0 10px; font-weight: 600;">
+          ${mailSubject}
+        </h1>
+        
+        <div style="height: 2px; width: 60px; background-color: white; margin: 0 auto;"></div>
+      </td>
+    </tr>
+  </table>
+</div>
  <div style="background-color: #ffffff; padding: 25px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-    <p style="margin-top: 0;">Dear ${user.dataValues.first_name},</p>
+    <p style="margin-top: 0;">Dear ${user.first_name || user.email},</p>
     
     <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; margin: 15px 0;">
-<p> Thank you for signing up! Please verify your email address by
-                  clicking the button below:</p>
-    
-    <div style="text-align: center; margin: 25px 0;">
-      <a href="${link}" 
-         style="background-color: #012152; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; transition: background-color 0.3s;">
-        Verify Account
-      </a>
+      <p style="margin: 0;">${message}</p>
     </div>
     
-    <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
-                  If you didn’t create an account, you can ignore this email.
+    ${
+      user.subscribed
+        ? `
+    <p style="font-size: 14px; color: #666;">
+      If you no longer wish to receive these emails, you can unsubscribe 
+      <a href="https://www.pickupmanng.ng/unsubscribe?email=${user.email}" style="color: #4F46E5; text-decoration: underline;">here</a>.
     </p>
-    </div>
+    `
+        : ""
+    }
     
     <p style="margin-bottom: 0;">Yours sincerely,<br /><strong>Pickupman</strong></p>
   </div>
@@ -114,6 +115,8 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
   </div>
 </div>
     `;
-  return { subject, html };
+
+  return { html };
 };
-module.exports = { sendVerificationEmail };
+
+module.exports = sendPromotionalEmailsTemplate;

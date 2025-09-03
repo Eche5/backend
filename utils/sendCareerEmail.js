@@ -1,7 +1,7 @@
 // utils/sendEmail.js
 const { SendMailClient } = require("zeptomail");
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendCareerEmail = async ({ to, subject, html }) => {
   const client = new SendMailClient({
     url: "https://api.zeptomail.com/v1.1/email",
     token: process.env.ZEPTOMAIL_TOKEN,
@@ -10,8 +10,8 @@ const sendEmail = async ({ to, subject, html }) => {
   try {
     await client.sendMail({
       from: {
-        address: process.env.EMAIL,
-        name: "noreply@pickupmanng",
+        address: "career@pickupmanng.ng",
+        name: "Pickupman Careers", // human-friendly name
       },
       to: [{ email_address: { address: to } }],
       subject,
@@ -24,4 +24,4 @@ const sendEmail = async ({ to, subject, html }) => {
     return false;
   }
 };
-module.exports = sendEmail;
+module.exports = sendCareerEmail;
