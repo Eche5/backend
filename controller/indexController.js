@@ -301,6 +301,16 @@ exports.startPayment = async (req, res, next) => {
         tracking_number: id,
       };
       const response = await paymentInstance.startPayment(paymentData);
+      const newPayment = {
+        reference: response.data.reference,
+        amount: Number(orderTotal),
+        email,
+        full_name: req.user.first_name + " " + req.user.last_name,
+        status: "pending",
+        tracking_number: id,
+      };
+      await Payments.create(newPayment);
+
       res.status(201).json({
         success: true,
         status: "Payment Started",
@@ -345,7 +355,7 @@ exports.createPayment = async (req, res) => {
 
     const updatedParcel = await Parcels.update(
       {
-        payment_status: "Paid",
+        payment_status: newStatus,
       },
       { where: { tracking_number: paymentData.metadata.tracking_number } }
     );
@@ -539,6 +549,7 @@ exports.startWalletFunding = async (req, res, next) => {
         status: "pending",
       };
       const createnewPayment = await Payments.create(newPayment);
+
       return res.status(201).json({
         success: true,
         status: "Payment Started",
