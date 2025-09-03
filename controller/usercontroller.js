@@ -9,6 +9,7 @@ const {
 const {
   sendFeedbackFormTemplate,
 } = require("../utils/emails/sendFeedbackFormTemplate");
+const sendEmail = require("../utils/sendMail");
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters!
 const IV_LENGTH = 16; // AES block size
