@@ -304,7 +304,7 @@ exports.startPayment = async (req, res, next) => {
       const newPayment = {
         reference: response.data.reference,
         amount: Number(orderTotal),
-        email,
+        email: req.user.email,
         full_name: req.user.first_name + " " + req.user.last_name,
         status: "pending",
         tracking_number: id,
