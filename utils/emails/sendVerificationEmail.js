@@ -1,5 +1,7 @@
 const sendVerificationEmail = (user) => {
   let subject = "Verify your email - Pickupmanng";
+  const link = `https://www.pickupmanng.ng/verify/${user.id}`;
+
   const html = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
     <div style="background-color: #012152; padding: 10px 15px; text-align: center; border-radius: 4px 4px 0 0;">
