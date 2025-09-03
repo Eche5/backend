@@ -327,7 +327,8 @@ exports.createPayment = async (req, res) => {
     if (hash !== signature) {
       return res.status(401).send("Unauthorized");
     }
-    const event = req.body;
+    const event = JSON.parse(rawBody);
+
     let paymentData;
     if (event.event === "charge.success") {
       paymentData = event.data;
@@ -384,7 +385,7 @@ exports.createPayment = async (req, res) => {
 
     await sendWhatsAppMessage(parcel[0]);
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       status: "Payment Created",
       data: {
