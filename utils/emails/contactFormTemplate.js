@@ -1,4 +1,4 @@
-const contactusformTemplate =  (
+const contactusformTemplate = (
   email,
   name,
   message,
@@ -45,6 +45,6 @@ const contactusformTemplate =  (
     </div>
   </div>
   `;
-  return { subjects, html };
+  return { subject, html };
 };
 module.exports = { contactusformTemplate };
