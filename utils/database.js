@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
     dialect: "mysql",
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
-    logging: console.log,
+    logging: false,
     dialectOptions: {
       connectTimeout: 60000,
     },
