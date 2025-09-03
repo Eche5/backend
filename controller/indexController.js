@@ -324,6 +324,9 @@ exports.createPayment = async (req, res) => {
     console.log("hash", hash);
     console.log("signature", signature);
     console.log("header", req.headers["x-paystack-signature"]);
+    if (hash !== signature) {
+      return res.status(401).send("Unauthorized");
+    }
     const event = JSON.parse(rawBody);
 
     let paymentData;
