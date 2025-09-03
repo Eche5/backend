@@ -12,8 +12,7 @@ const Newsletter = require("../models/newsLetter");
 const {
   generateResetEmailTemplate,
 } = require("../utils/emails/sendResetEmail");
-const { sendEmail } = require("../utils/sendMail");
-
+const sendEmail = require("../utils/sendMail");
 exports.createUser = async (req, res) => {
   const { email, password, first_name, last_name, phonenumber, role } =
     req.body;

@@ -1,5 +1,5 @@
 // utils/generateResetEmailTemplate.js
-export const generateResetEmailTemplate = (user, resetToken) => {
+const generateResetEmailTemplate = (user, resetToken) => {
   const subject = "Password Reset Request - Pickupmanng";
   const html = `
      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
@@ -116,3 +116,4 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
     `;
   return { subject, html };
 };
+module.exports = { generateResetEmailTemplate };

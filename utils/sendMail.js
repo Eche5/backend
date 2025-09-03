@@ -1,7 +1,7 @@
 // utils/sendEmail.js
-import { SendMailClient } from "zeptomail";
+const { SendMailClient } = require("zeptomail");
 
-export const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html }) => {
   const client = new SendMailClient({
     url: "https://api.zeptomail.com/v1.1/email",
     token: process.env.ZEPTOMAIL_TOKEN,
@@ -24,3 +24,4 @@ export const sendEmail = async ({ to, subject, html }) => {
     return false;
   }
 };
+module.exports = sendEmail;
