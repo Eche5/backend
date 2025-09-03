@@ -389,7 +389,6 @@ async function sendWhatsAppMessage(parcelData) {
     });
 
     const responses = await Promise.all(promises);
-    console.log(responses);
     return responses.map((response) => response.data);
   } catch (error) {
     throw error;
@@ -445,7 +444,6 @@ exports.sendEmailsToUsers = async (req, res) => {
     const verifiedUsers = await Users.findAll({
       where: { role: "user", is_verified: true },
     });
-    console.log(subject);
     const newsLetterUser = await Newsletter.findAll();
     const merged = [
       ...verifiedUsers.map((u) => u.dataValues),
@@ -472,7 +470,6 @@ exports.sendEmailsToUsers = async (req, res) => {
             value,
             subject // ✅ now exists
           );
-          console.log(html);
           sendMailwithAttachment({
             to: user.email,
             subject,

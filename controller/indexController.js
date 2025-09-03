@@ -232,7 +232,6 @@ exports.GetAllSaversParcels = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.pageSize) || 10;
   const offset = (page - 1) * pageSize;
-  console.log(page, pageSize);
   const parcels = await Parcels.findAll({
     where: {
       payment_status: "paid",
@@ -324,8 +323,6 @@ exports.startPayment = async (req, res, next) => {
 
 exports.createPayment = async (req, res) => {
   try {
-    console.log("Webhook received:", req.body);
-
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY)
       .update(JSON.stringify(req.body))
@@ -364,7 +361,6 @@ exports.createPayment = async (req, res) => {
     });
 
     if (!payment) {
-      console.log("Payment not found in database");
       return res
         .status(404)
         .json({ success: false, message: "Payment not found" });
@@ -527,7 +523,6 @@ exports.startWalletFunding = async (req, res, next) => {
   try {
     const { email, first_name, last_name } = req.user;
     const { amount } = req.body;
-    console.log(email, first_name, last_name);
     const user = await Users.findAll({
       where: {
         email: email,

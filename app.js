@@ -45,9 +45,6 @@ const authRateLimiter = rateLimit({
 
     updateBookedShipmentCount(count);
     updateUserCount(userCount);
-
-    console.log(`Initial booked shipment count: ${count}`);
-    console.log(`Initial user count: ${userCount}`);
   } catch (error) {
     console.error("Failed to fetch initial counts:", error);
   }
@@ -62,11 +59,9 @@ cron.schedule("*/5 * * * *", async () => {
     const userCount = await Users.count({
       where: { role: "user", is_verified: true },
     });
-    console.log(`Current booked shipment count: ${count}`);
-    console.log(`Current user count: ${userCount}`);
+
     updateUserCount(userCount);
     updateBookedShipmentCount(count);
-    console.log(`Updated booked shipment count: ${count}`);
   } catch (error) {
     console.error("Failed to update shipment count:", error);
   }

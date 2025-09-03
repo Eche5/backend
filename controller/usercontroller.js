@@ -236,7 +236,6 @@ exports.sendFeedback = async (req, res) => {
       openFeedback
     );
     await sendEmail({ to: "support@pickupmanng.ng", subject, html });
-    console.log("feedback successfully sent:", info.accepted[0]);
     return res.status(200).json({
       success: true,
       message: "feedback successfully sent",
@@ -309,7 +308,6 @@ exports.updateUsersDetails = async (req, res) => {
     next_of_kin_email,
     next_of_kin_address,
   } = req.body;
-  console.log(req.body);
   const id = req.user.id;
 
   if (!id) {

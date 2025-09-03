@@ -234,7 +234,6 @@ exports.login = async (req, res, next) => {
         email: email,
       },
     });
-    console.log(user);
     const match = await bcrypt.compare(password, user[0]?.password);
 
     if (!match) {
@@ -369,7 +368,6 @@ exports.resetPassword = async (req, res, next) => {
         },
       },
     });
-    console.log(user, resetToken);
     if (!user || user.length === 0) {
       return res.status(400).json({
         success: false,

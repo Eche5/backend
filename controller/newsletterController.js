@@ -18,7 +18,6 @@ exports.subscribeUser = async (req, res) => {
   const { email } = req.body;
 
   const errors = validationResult(req);
-  console.log(errors.isEmpty());
   if (!errors.isEmpty()) {
     return res.status(401).json({
       success: false,
@@ -74,9 +73,7 @@ exports.subscribeUser = async (req, res) => {
 
 exports.unsubscribeUser = async (req, res) => {
   const { email } = req.body;
-  console.log(email);
   const errors = validationResult(req);
-  console.log(errors.isEmpty());
   if (!errors.isEmpty()) {
     return res.status(401).json({
       success: false,
