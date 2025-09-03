@@ -315,12 +315,11 @@ exports.startPayment = async (req, res, next) => {
 exports.createPayment = async (req, res) => {
   try {
     console.log("Webhook received:", req.body);
-    console.log(process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY);
     const signature = req.get("x-paystack-signature");
 
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SHIPMENT_WEBHOOK_KEY)
-      .update(JSON.stringify(req.body))
+      .update(req.body)
       .digest("hex");
     console.log("hash", hash);
     console.log("signature", signature);
@@ -352,7 +351,26 @@ exports.createPayment = async (req, res) => {
       },
       { where: { tracking_number: paymentData.metadata.tracking_number } }
     );
+    const payment = await Payments.findOne({
+      where: { reference: paymentData.reference },
+    });
 
+    if (!payment) {
+      console.log("Payment not found in database");
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment not found" });
+    }
+
+    // Check if already processed
+    if (payment.status === "success") {
+      return res
+        .status(200)
+        .json({ success: true, message: "Payment already processed" });
+    }
+
+    // Update payment status
+    await payment.update({ status: "success" });
     const { subject, html } = sendParcelUpdateTemplate(
       paymentData.metadata.full_name,
       paymentData.metadata.tracking_number,
