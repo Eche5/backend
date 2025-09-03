@@ -9,6 +9,10 @@ const nodemailer = require("nodemailer");
 const Users = require("../models/users");
 const { Op } = require("sequelize");
 const Newsletter = require("../models/newsLetter");
+const {
+  generateResetEmailTemplate,
+} = require("../utils/emails/sendResetEmail");
+const { sendEmail } = require("../utils/sendMail");
 
 exports.createUser = async (req, res) => {
   const { email, password, first_name, last_name, phonenumber, role } =
@@ -512,7 +516,6 @@ exports.forgotPassword = async (req, res, next) => {
         email: email,
       },
     });
-    console.log(user);
     if (user) {
       const resetToken = crypto.randomBytes(32).toString("hex");
       const resetTokenExpires = Date.now() + 3600000;
@@ -527,7 +530,8 @@ exports.forgotPassword = async (req, res, next) => {
           },
         }
       );
-      await sendresetTokenemail(email, resetToken, user);
+      const { subject, html } = generateResetEmailTemplate(user, resetToken);
+      await sendEmail({ to: email, subject, html });
       return res.status(200).json({
         success: true,
         code: 200,
@@ -741,6 +745,7 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
   const transporter = nodemailer.createTransport({
     host: "smtp.zeptomail.com",
     port: 587,
+    secure: false, // <-- change to false
     auth: {
       user: "emailapikey",
       pass: process.env.PASSWORD,

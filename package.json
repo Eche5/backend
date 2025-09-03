@@ -34,7 +34,8 @@
     "passport-strategy": "^1.0.0",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
-    "sql": "^0.78.0"
+    "sql": "^0.78.0",
+    "zeptomail": "^6.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
