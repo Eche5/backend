@@ -315,7 +315,6 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
         ];
         for (const recipient of recipients) {
           const { subject, html } = sendBulkParcelUpdate(parcel, recipient);
-          console.log(html);
           sendEmail({
             to: recipient.email,
             subject,
