@@ -543,7 +543,6 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-
 exports.resetPassword = async (req, res, next) => {
   try {
     // Validate request
@@ -741,8 +740,7 @@ Pickupmanng— Nigeria’s trusted logistics partner for fast, safe, and reliabl
 
   const transporter = nodemailer.createTransport({
     host: "smtp.zeptomail.com",
-   port: 465,
-  secure: true,
+    port: 587,
     auth: {
       user: "emailapikey",
       pass: process.env.PASSWORD,
