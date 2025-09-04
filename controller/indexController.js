@@ -353,7 +353,7 @@ exports.createPayment = async (req, res) => {
 
     order.payment_status = newStatus;
 
-    const updatedParcel = await Parcels.update(
+    await Parcels.update(
       {
         payment_status: newStatus,
       },
@@ -362,7 +362,9 @@ exports.createPayment = async (req, res) => {
     const payment = await Payments.findOne({
       where: { reference: paymentData.reference },
     });
-
+    const newparcel = await Parcels.findAll({
+      where: { tracking_number: paymentData.metadata.tracking_number },
+    });
     if (!payment) {
       return res
         .status(404)
@@ -381,10 +383,10 @@ exports.createPayment = async (req, res) => {
     const { subject, html } = sendParcelUpdateTemplate(
       paymentData.metadata.full_name,
       paymentData.metadata.tracking_number,
-      updatedParcel.state,
-      updatedParcel.item_name,
-      updatedParcel.quantity,
-      updatedParcel.parcel_weight
+      newparcel[0].state,
+      newparcel[0].item_name,
+      newparcel[0].quantity,
+      newparcel[0].parcel_weight
     );
     await sendEmail({ to: paymentData.customer.email, subject, html });
 
@@ -396,7 +398,7 @@ exports.createPayment = async (req, res) => {
       data: {
         payment: paymentData.data,
         order,
-        state: updatedParcel[0]?.state,
+        state: newparcel[0]?.state,
       },
     });
   } catch (error) {
