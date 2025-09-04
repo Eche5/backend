@@ -7,8 +7,11 @@
     "test": "npm run start",
     "start": "nodemon server.js"
   },
-  "author": "",
+  "author": "Echefula Ndukwe",
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
     "axios": "^1.7.7",
