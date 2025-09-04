@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "npm run start",
-    "start": "node --trace-deprecation server.js"
+    "start": "nodemon server.js"
   },
   "author": "Echefula Ndukwe",
   "license": "ISC",
@@ -13,7 +13,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.54.0",
+    "@supabase/supabase-js": "^2.57.0",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
