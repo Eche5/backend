@@ -331,7 +331,10 @@ exports.createPayment = async (req, res) => {
       .digest("hex");
     console.log("hash", hash);
     console.log("header", req.headers["x-paystack-signature"]);
-
+    if (hash !== req.headers["x-paystack-signature"]) {
+      console.log("Invalid signature");
+      return res.status(401).send("Unauthorized");
+    }
     const event = req.body;
     if (event.event !== "charge.success") {
       console.log("Ignoring non-payment event:", event.event);
