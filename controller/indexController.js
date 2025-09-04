@@ -333,11 +333,12 @@ exports.createPayment = async (req, res) => {
     console.log("header", req.headers["x-paystack-signature"]);
 
     const event = req.body;
-
-    let paymentData;
-    if (event.event === "charge.success") {
-      paymentData = event.data;
+    if (event.event !== "charge.success") {
+      console.log("Ignoring non-payment event:", event.event);
+      return res.sendStatus(200); // acknowledge but do nothing
     }
+    let paymentData = event.data;
+
     const newStatus = paymentData.status === "success" ? "Paid" : "Failed";
     const parcel = await Parcels.findAll({
       where: { tracking_number: paymentData.metadata.tracking_number },
