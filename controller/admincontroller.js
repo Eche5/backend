@@ -10,6 +10,8 @@ const qs = require("qs");
 const Newsletter = require("../models/newsLetter");
 const Activitylogs = require("../models/activityLogs");
 const { email } = require("../middleware/validation");
+const dns = require("dns/promises");
+
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 32 characters!
 const crypto = require("crypto");
 const multer = require("multer");
@@ -19,6 +21,10 @@ const {
   sendBulkParcelUpdate,
 } = require("../utils/emails/sendBulkParcelUpdate");
 const sendEmail = require("../utils/sendMail");
+const {
+  validateEmail,
+  validateRecipientEmail,
+} = require("../utils/emailValidation");
 const storage = multer.memoryStorage(); // store in memory for direct email sending
 const upload = multer({ storage });
 function decrypt(encryptedText) {
@@ -236,13 +242,22 @@ exports.updateParcel = async (req, res) => {
           },
         ];
         for (const recipient of recipients) {
-          const { subject, html } = sendBulkParcelUpdate(parcel[0], recipient);
+          const validation = await validateRecipientEmail(recipient.email);
+          if (validation.canProceed) {
+            const { subject, html } = sendBulkParcelUpdate(
+              parcel[0],
+              recipient
+            );
 
-          sendEmail({
-            to: recipient.email,
-            subject,
-            html,
-          });
+            sendEmail({
+              to: recipient.email,
+              subject,
+              html,
+            });
+          } else {
+            // Show error to user
+            console.log(validation.message);
+          }
         }
         const fullname = `${req.user.first_name} ${req.user.last_name}`;
         await Activitylogs.create({
@@ -267,6 +282,22 @@ exports.updateParcel = async (req, res) => {
     return false;
   }
 };
+
+async function isValidEmail(email) {
+  // Basic format check
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!regex.test(email)) return false;
+
+  // MX record check
+  const domain = email.split("@")[1];
+  try {
+    const records = await dns.resolveMx(domain);
+    return records && records.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 exports.bulkUpdateParcelStatus = async (req, res) => {
   try {
     const parcelsToUpdate = req.body.parcels; // Expecting an array of { id, status }
@@ -314,12 +345,18 @@ exports.bulkUpdateParcelStatus = async (req, res) => {
           },
         ];
         for (const recipient of recipients) {
-          const { subject, html } = sendBulkParcelUpdate(parcel, recipient);
-          sendEmail({
-            to: recipient.email,
-            subject,
-            html,
-          });
+          const validation = await validateRecipientEmail(recipient.email);
+          if (validation.canProceed) {
+            const { subject, html } = sendBulkParcelUpdate(parcel, recipient);
+            sendEmail({
+              to: recipient.email,
+              subject,
+              html,
+            });
+          } else {
+            // Show error to user
+            console.log(validation.message);
+          }
         }
         // Optionally notify users (remove if not needed)
 
